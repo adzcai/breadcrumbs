@@ -224,7 +224,7 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
         requestAnimationFrame(() => {
           const gutterHeight = trailDiv.getBoundingClientRect().height;
           // set padding top of gutter to match height of trailDiv
-          cmGutter.style.paddingTop = `${gutterHeight + 4}px`;
+          (<HTMLElement>cmGutter).style.paddingTop = `${gutterHeight + 4}px`;
         });
       }
 

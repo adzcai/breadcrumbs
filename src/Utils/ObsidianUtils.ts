@@ -135,7 +135,7 @@ export function getAlt(node: string, plugin: BCPlugin): string | null {
   } else return null;
 }
 
-export async function waitForCache(plugin: BCPlugin) {
+export async function waitForCache() {
   if (app.plugins.enabledPlugins.has("dataview")) {
     let basename: string;
     while (!basename || !app.plugins.plugins.dataview.api.page(basename)) {
@@ -143,7 +143,7 @@ export async function waitForCache(plugin: BCPlugin) {
       basename = getCurrFile()?.basename;
     }
   } else {
-    await waitForResolvedLinks(app);
+    await waitForResolvedLinks();
   }
 }
 

@@ -2,7 +2,7 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import { addFeatherIcon } from "obsidian-community-lib";
 import SideTree from "../Components/SideTree.svelte";
 import { TREE_VIEW } from "../constants";
-import type BCPlugin from "../../main";
+import type BCPlugin from "../main";
 
 export default class TreeView extends ItemView {
   private plugin: BCPlugin;

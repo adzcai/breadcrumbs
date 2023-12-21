@@ -134,13 +134,13 @@ export default class BCPlugin extends Plugin {
     ];
 
     for (const { constructor, type } of this.VIEWS) {
-      this.registerView(type, (leaf) => new constructor(leaf, this));
+      this.registerView(type, (leaf) => new (<any>constructor)(leaf, this));
     }
 
     addIcon(DUCK_ICON, DUCK_ICON_SVG);
     addIcon(TRAIL_ICON, TRAIL_ICON_SVG);
 
-    await waitForCache(this);
+    await waitForCache();
     this.mainG = await buildMainG(this);
     this.closedG = buildClosedG(this);
 

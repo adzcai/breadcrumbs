@@ -50,6 +50,7 @@ import {
   getDVBasename
 } from "./Utils/ObsidianUtils";
 import { drawTrail } from "./Views/TrailView";
+import type { DataArray } from "obsidian-dataview/lib/api/data-array";
 
 function getDVMetadataCache(plugin: BCPlugin) {
   const { db } = plugin;
@@ -75,7 +76,9 @@ function getObsMetadataCache(plugin: BCPlugin, files: TFile[]) {
   return frontms;
 }
 
-const isDVProxy = (item: RawValue) => typeof item.defaultComparator === "function"
+function isDVProxy(item: RawValue | DataArray<RawValue>): item is DataArray<RawValue> {
+  return typeof (item as DataArray<RawValue>).defaultComparator === "function";
+}
 
 /**
  * Keep unwrapping a proxied item until it isn't one anymore

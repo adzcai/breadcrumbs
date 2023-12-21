@@ -3,7 +3,7 @@ import { dfsFromNode } from "graphology-traversal";
 import type { Attributes } from "graphology-types";
 import { info } from "loglevel";
 import type { App } from "obsidian";
-import type BCPlugin from "../../main";
+// import type BCPlugin from "../../main";
 import {
   BC_I_REFLEXIVE,
   BC_ORDER,
@@ -21,6 +21,7 @@ import type {
 } from "../interfaces";
 import { getFieldInfo, getOppDir, getOppFields } from "./HierUtils";
 import { getBaseFromMDPath } from "./ObsidianUtils";
+import type BCPlugin from "../main";
 
 // This function takes the real & implied graphs for a given relation, and returns a new graphs with both.
 // It makes implied relations real

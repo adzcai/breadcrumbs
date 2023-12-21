@@ -143,7 +143,7 @@ export async function thread(plugin: BCPlugin, field: string) {
     ? app.workspace.getLeaf(true)
     : app.workspace.activeLeaf;
 
-  await leaf.openFile(newFile, { active: true, mode: "source" });
+  await leaf.openFile(newFile, { active: true, state: "source" });
 
   if (templatePath) {
     if (app.plugins.plugins["templater-obsidian"]) {

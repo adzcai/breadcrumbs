@@ -176,7 +176,7 @@ export type RealNImplied = {
 };
 
 export interface HierarchyNoteItem {
-  parent: string;
+  parent: string | null;
   field: string;
   note: string;
 }
