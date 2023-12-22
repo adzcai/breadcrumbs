@@ -1,22 +1,22 @@
-import type { MultiGraph } from "graphology";
-import { info } from "loglevel";
-import type { TFile } from "obsidian";
+import type { MultiGraph } from 'graphology';
+import { info } from 'loglevel';
+import type { TFile } from 'obsidian';
 import {
   BC_IGNORE,
   BC_TAG_NOTE,
   BC_TAG_NOTE_EXACT,
   BC_TAG_NOTE_FIELD,
-} from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
-import { splitAndTrim } from "../Utils/generalUtils";
+} from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
+import { splitAndTrim } from '../Utils/generalUtils';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { addHash, dropHash, getDVBasename } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { addHash, dropHash, getDVBasename } from '../Utils/ObsidianUtils';
 
 const getAllTags = (file: TFile, withHash = true): string[] => {
   const { tags, frontmatter } = app.metadataCache.getFileCache(file);
@@ -31,14 +31,14 @@ const getAllTags = (file: TFile, withHash = true): string[] => {
     splitAndTrim(t).forEach((innerT) => allTags.push(dropHash(innerT)));
   });
 
-  return allTags.map((t) => (withHash ? "#" : "") + t.toLowerCase());
+  return allTags.map((t) => (withHash ? '#' : '') + t.toLowerCase());
 };
 
 export function addTagNotesToGraph(
   plugin: BCPlugin,
   eligableAlts: dvFrontmatterCache[],
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { userHiers, tagNoteField } = settings;
@@ -63,8 +63,7 @@ export function addTagNotesToGraph(
       .map(getDVBasename);
     info({ targets });
 
-    let field =
-      (altFile[BC_TAG_NOTE_FIELD] as string) ?? (tagNoteField || fields[0]);
+    const field = (altFile[BC_TAG_NOTE_FIELD] as string) ?? (tagNoteField || fields[0]);
 
     targets.forEach((target) => {
       const sourceOrder = getSourceOrder(altFile);
@@ -77,7 +76,7 @@ export function addTagNotesToGraph(
         target,
         sourceOrder,
         targetOrder,
-        true
+        true,
       );
     });
   });

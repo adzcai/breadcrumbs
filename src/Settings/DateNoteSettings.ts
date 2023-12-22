@@ -1,25 +1,25 @@
-import { DropdownComponent, Setting } from "obsidian";
-import { refreshIndex } from "../refreshIndex";
-import type BCPlugin from "../main";
-import { getFields } from "../Utils/HierUtils";
-import { fragWithHTML, subDetails } from "./BreadcrumbsSettingTab";
+import { DropdownComponent, Setting } from 'obsidian';
+import { refreshIndex } from '../refreshIndex';
+import type BCPlugin from '../main';
+import { getFields } from '../Utils/HierUtils';
+import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
 
 export function addDateNoteSettings(
   plugin: BCPlugin,
-  alternativeHierarchyDetails: HTMLDetailsElement
+  alternativeHierarchyDetails: HTMLDetailsElement,
 ) {
   const { settings } = plugin;
   const { userHiers } = settings;
   const fields = getFields(userHiers);
-  const fieldOptions = { "": "" };
+  const fieldOptions = { '': '' };
   fields.forEach((field) => (fieldOptions[field] = field));
 
-  const dateNoteDetails = subDetails("Date Notes", alternativeHierarchyDetails);
+  const dateNoteDetails = subDetails('Date Notes', alternativeHierarchyDetails);
 
   new Setting(dateNoteDetails)
-    .setName("Add Date Notes to Graph")
+    .setName('Add Date Notes to Graph')
     .setDesc(
-      "Breadcrumbs will try to link each daily note to the next one using the date format you provide in the settings below."
+      'Breadcrumbs will try to link each daily note to the next one using the date format you provide in the settings below.',
     )
     .addToggle((toggle) => {
       toggle.setValue(settings.addDateNotes).onChange(async (value) => {
@@ -30,11 +30,11 @@ export function addDateNoteSettings(
     });
 
   new Setting(dateNoteDetails)
-    .setName("Daily Note Format")
+    .setName('Daily Note Format')
     .setDesc(
       fragWithHTML(
-        `The Luxon date format of your daily notes.</br><strong>Note</strong>: Luxon uses different formats to Moment, so your format for the Daily Notes plugin may not work here. Be sure to check out <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">the docs</a> to find the right format.<br>You can escape characters by wrapping them in single quotes (e.g. <code>yyyy-MM-dd 'Daily Note'</code>)`
-      )
+        'The Luxon date format of your daily notes.</br><strong>Note</strong>: Luxon uses different formats to Moment, so your format for the Daily Notes plugin may not work here. Be sure to check out <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">the docs</a> to find the right format.<br>You can escape characters by wrapping them in single quotes (e.g. <code>yyyy-MM-dd \'Daily Note\'</code>)',
+      ),
     )
     .addText((text) => {
       text.setValue(settings.dateNoteFormat);
@@ -46,11 +46,11 @@ export function addDateNoteSettings(
     });
 
   new Setting(dateNoteDetails)
-    .setName("Date Note Field")
+    .setName('Date Note Field')
     .setDesc(
       fragWithHTML(
-        "Select a field to point to tomorrow's note from the current note. The opposite field will be used to point to yesterday's note."
-      )
+        "Select a field to point to tomorrow's note from the current note. The opposite field will be used to point to yesterday's note.",
+      ),
     )
     .addDropdown((dd: DropdownComponent) => {
       dd.addOptions(fieldOptions)

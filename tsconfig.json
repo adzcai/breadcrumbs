@@ -1,6 +1,5 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
-
   "include": [
     "src/**/*",
     "src/*",
@@ -17,7 +16,7 @@
     "paths": {
       "src": ["src/*"]
     },
-    "outDir": "dist",
+    "noEmit": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "lib": ["ES2019", "DOM"]

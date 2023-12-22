@@ -1,20 +1,20 @@
-import { info } from "loglevel";
-import { MarkdownPostProcessorContext, Notice } from "obsidian";
-import { getDVApi } from "./Utils/ObsidianUtils";
-import { createIndex, indexToLinePairs } from "./Commands/CreateIndex";
-import CBTree from "./Components/CBTree.svelte";
-import { CODEBLOCK_FIELDS, CODEBLOCK_TYPES, DIRECTIONS } from "./constants";
-import type { CodeblockFields, ParsedCodeblock } from "./interfaces";
-import type BCPlugin from "./main";
-import { dropFolder, splitAndTrim } from "./Utils/generalUtils";
+import { info } from 'loglevel';
+import { MarkdownPostProcessorContext, Notice } from 'obsidian';
+import { getDVApi } from './Utils/ObsidianUtils';
+import { createIndex, indexToLinePairs } from './Commands/CreateIndex';
+import CBTree from './Components/CBTree.svelte';
+import { CODEBLOCK_FIELDS, CODEBLOCK_TYPES, DIRECTIONS } from './constants';
+import type { CodeblockFields, ParsedCodeblock } from './interfaces';
+import type BCPlugin from './main';
+import { dropFolder, splitAndTrim } from './Utils/generalUtils';
 import {
   dfsAllPaths,
   getReflexiveClosure,
   getSubForFields,
   getSubInDirs,
-} from "./Utils/graphUtils";
-import { getFieldInfo, getFields, getOppDir } from "./Utils/HierUtils";
-import { createJuggl } from "./Visualisations/Juggl";
+} from './Utils/graphUtils';
+import { getFieldInfo, getFields, getOppDir } from './Utils/HierUtils';
+import { createJuggl } from './Visualisations/Juggl';
 
 export function getCodeblockCB(plugin: BCPlugin) {
   const { settings, db } = plugin;
@@ -23,21 +23,23 @@ export function getCodeblockCB(plugin: BCPlugin) {
   return (
     source: string,
     el: HTMLElement,
-    ctx: MarkdownPostProcessorContext
+    ctx: MarkdownPostProcessorContext,
   ) => {
-    db.start2G("Codeblock");
+    db.start2G('Codeblock');
     const parsedSource = parseCodeBlockSource(source);
     const err = codeblockError(plugin, parsedSource);
 
-    if (err !== "") {
+    if (err !== '') {
       el.innerHTML = err;
       db.end2G();
       return;
     }
 
-    let min = 0,
-      max = Infinity;
-    let { depth, dir, fields, from, implied, flat } = parsedSource;
+    let min = 0;
+    let max = Infinity;
+    const {
+      depth, dir, fields, from, implied, flat,
+    } = parsedSource;
     if (depth !== undefined) {
       const minNum = parseInt(depth[0]);
       if (!isNaN(minNum)) min = minNum;
@@ -45,36 +47,33 @@ export function getCodeblockCB(plugin: BCPlugin) {
       if (!isNaN(maxNum)) max = maxNum;
     }
 
-
     const currFile = app.metadataCache.getFirstLinkpathDest(
       ctx.sourcePath,
-      ""
+      '',
     );
     const { basename } = currFile;
 
-    let froms = undefined;
+    let froms;
     if (from !== undefined) {
       try {
         const api = getDVApi(plugin);
         if (api) {
           const pages = api.pagePaths(from)?.values;
           froms = pages.map(dropFolder);
-        } else new Notice("Dataview must be enabled for `from` to work.");
+        } else new Notice('Dataview must be enabled for `from` to work.');
       } catch (e) {
         new Notice(`The query "${from}" failed.`);
       }
     }
 
     const oppDir = getOppDir(dir);
-    const sub =
-      implied === false
-        ? getSubInDirs(plugin.mainG, dir)
-        : getSubInDirs(plugin.mainG, dir, oppDir);
+    const sub = implied === false
+      ? getSubInDirs(plugin.mainG, dir)
+      : getSubInDirs(plugin.mainG, dir, oppDir);
     const closed = getReflexiveClosure(sub, userHiers);
 
     const subFields = fields ?? getFields(userHiers);
     const subClosed = getSubForFields(getSubInDirs(closed, dir), subFields);
-
 
     const allPaths = dfsAllPaths(subClosed, basename);
     const index = createIndex(allPaths, false, createIndexIndent);
@@ -83,7 +82,7 @@ export function getCodeblockCB(plugin: BCPlugin) {
     const lines = indexToLinePairs(index, flat);
 
     switch (parsedSource.type) {
-      case "tree":
+      case 'tree':
         new CBTree({
           target: el,
           props: {
@@ -98,7 +97,7 @@ export function getCodeblockCB(plugin: BCPlugin) {
           },
         });
         break;
-      case "juggl":
+      case 'juggl':
         createdJugglCB(
           plugin,
           el,
@@ -107,7 +106,7 @@ export function getCodeblockCB(plugin: BCPlugin) {
           froms,
           basename,
           min,
-          max
+          max,
         );
         break;
     }
@@ -121,19 +120,16 @@ export function getCodeblockCB(plugin: BCPlugin) {
  * @param {string} value - string
  * @returns {string | boolean}
  */
-const parseAsBool = (value: string): string | boolean =>
-  value === "true" ? true : value === "false" ? false : value;
+const parseAsBool = (value: string): string | boolean => (value === 'true' ? true : value === 'false' ? false : value);
 
 function parseCodeBlockSource(source: string): ParsedCodeblock {
-  const lines = source.split("\n");
-  const getValue = (type: string) =>
-    lines
-      .find((l) => l.startsWith(`${type}:`))
-      ?.split(":")?.[1]
-      ?.trim();
+  const lines = source.split('\n');
+  const getValue = (type: string) => lines
+    .find((l) => l.startsWith(`${type}:`))
+    ?.split(':')?.[1]
+    ?.trim();
 
-  const results: { [field in CodeblockFields]: string | boolean | string[] } =
-    {};
+  const results: { [field in CodeblockFields]: string | boolean | string[] } = {};
 
   CODEBLOCK_FIELDS.forEach((field) => {
     const value = getValue(field);
@@ -153,63 +149,56 @@ function parseCodeBlockSource(source: string): ParsedCodeblock {
 }
 
 function codeblockError(plugin: BCPlugin, parsedSource: ParsedCodeblock) {
-  const { dir, fields, type, title, depth, flat, content, from, implied } =
-    parsedSource;
+  const {
+    dir, fields, type, title, depth, flat, content, from, implied,
+  } = parsedSource;
   const { userHiers } = plugin.settings;
-  let err = "";
+  let err = '';
 
-  if (!CODEBLOCK_TYPES.includes(type))
+  if (!CODEBLOCK_TYPES.includes(type)) {
     err += `<code>type: ${type}</code> is not a valid type. It must be one of: ${CODEBLOCK_TYPES.map(
-      (type) => `<code>${type}</code>`
-    ).join(", ")}.</br>`;
+      (type) => `<code>${type}</code>`,
+    ).join(', ')}.</br>`;
+  }
 
   const validDir = DIRECTIONS.includes(dir);
-  if (!validDir)
-    err += `<code>dir: ${dir}</code> is not a valid direction.</br>`;
+  if (!validDir) err += `<code>dir: ${dir}</code> is not a valid direction.</br>`;
 
   const allFields = getFields(userHiers);
   [fields].flat()?.forEach((f) => {
-    if (f !== undefined && !allFields.includes(f))
-      err += `<code>fields: ${f}</code> is not a field in your hierarchies.</br>`;
+    if (f !== undefined && !allFields.includes(f)) err += `<code>fields: ${f}</code> is not a field in your hierarchies.</br>`;
   });
 
-  if (title !== undefined && title !== false)
-    err += `<code>title: ${title}</code> is not a valid value. It has to be <code>false</code>, or leave the entire line out.</br>`;
+  if (title !== undefined && title !== false) err += `<code>title: ${title}</code> is not a valid value. It has to be <code>false</code>, or leave the entire line out.</br>`;
 
-  if (depth !== undefined && depth.every((num) => isNaN(parseInt(num))))
-    err += `<code>depth: ${depth}</code> is not a valid value. It has to be a number.</br>`;
+  if (depth !== undefined && depth.every((num) => isNaN(parseInt(num)))) err += `<code>depth: ${depth}</code> is not a valid value. It has to be a number.</br>`;
 
-  if (flat !== undefined && flat !== true)
-    err += `<code>flat: ${flat}</code> is not a valid value. It has to be <code>true</code>, or leave the entire line out.</br>`;
+  if (flat !== undefined && flat !== true) err += `<code>flat: ${flat}</code> is not a valid value. It has to be <code>true</code>, or leave the entire line out.</br>`;
 
-  if (content !== undefined && content !== "open" && content !== "closed")
-    err += `<code>content: ${content}</code> is not a valid value. It has to be <code>open</code> or <code>closed</code>, or leave the entire line out.</br>`;
+  if (content !== undefined && content !== 'open' && content !== 'closed') err += `<code>content: ${content}</code> is not a valid value. It has to be <code>open</code> or <code>closed</code>, or leave the entire line out.</br>`;
 
   if (
-    from !== undefined &&
-    !app.plugins.enabledPlugins.has("dataview")
+    from !== undefined
+    && !app.plugins.enabledPlugins.has('dataview')
   ) {
-    err += `Dataview must be enabled to use <code>from</code>.</br>`;
+    err += 'Dataview must be enabled to use <code>from</code>.</br>';
   }
 
-  if (implied !== undefined && implied !== false)
-    err += `<code>implied: ${implied}</code> is not a valid value. It has to be <code>false</code>, or leave the entire line out.</br>`;
+  if (implied !== undefined && implied !== false) err += `<code>implied: ${implied}</code> is not a valid value. It has to be <code>false</code>, or leave the entire line out.</br>`;
 
-  return err === ""
-    ? ""
+  return err === ''
+    ? ''
     : `${err}</br>
     A valid example would be:
     <pre><code>
       type: tree
-      dir: ${validDir ? dir : "down"}
+      dir: ${validDir ? dir : 'down'}
       fields: ${allFields
-      .map((f) => {
-        return { f, dir: getFieldInfo(userHiers, f).fieldDir };
-      })
-      .filter((info) => info.dir === dir)
-      .map((info) => info.f)
-      .join(", ") || "child"
-    }
+    .map((f) => ({ f, dir: getFieldInfo(userHiers, f).fieldDir }))
+    .filter((info) => info.dir === dir)
+    .map((info) => info.f)
+    .join(', ') || 'child'
+}
       depth: 3
       </code></pre>`;
 }
@@ -221,13 +210,13 @@ export function meetsConditions(
   node: string,
   froms: string[],
   min: number,
-  max: number
+  max: number,
 ) {
   const depth = indentToDepth(indent);
   return (
-    depth >= min &&
-    depth <= max &&
-    (froms === undefined || froms.includes(node))
+    depth >= min
+    && depth <= max
+    && (froms === undefined || froms.includes(node))
   );
 }
 
@@ -239,12 +228,12 @@ export function createdJugglCB(
   froms: string[],
   source: string,
   min: number,
-  max: number
+  max: number,
 ) {
   const nodes = lines
     .filter(([indent, node]) => meetsConditions(indent, node, froms, min, max))
-    .map(([_, node]) => node + ".md");
-  if (min <= 0) nodes.push(source + ".md");
+    .map(([_, node]) => `${node}.md`);
+  if (min <= 0) nodes.push(`${source}.md`);
 
   createJuggl(plugin, target, nodes, args);
 }

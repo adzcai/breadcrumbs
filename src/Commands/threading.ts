@@ -1,31 +1,30 @@
-import { normalizePath, Notice, TFile } from "obsidian";
-import type { Directions } from "../interfaces";
-import type BCPlugin from "../main";
-import { getFieldInfo, getOppFields } from "../Utils/HierUtils";
-import { createOrUpdateYaml, getCurrFile, splitAtYaml } from "../Utils/ObsidianUtils";
+import { normalizePath, Notice, TFile } from 'obsidian';
+import type { Directions } from '../interfaces';
+import type BCPlugin from '../main';
+import { getFieldInfo, getOppFields } from '../Utils/HierUtils';
+import { createOrUpdateYaml, getCurrFile, splitAtYaml } from '../Utils/ObsidianUtils';
 
 const resolveThreadingNameTemplate = (
   template: string,
   currFile: TFile,
   field: string,
   dir: Directions,
-  dateFormat: string
-) =>
-  template
-    ? template
-      .replace("{{current}}", currFile.basename)
-      .replace("{{field}}", field)
-      .replace("{{dir}}", dir)
-      //@ts-ignore
-      .replace("{{date}}", moment().format(dateFormat))
-    : "Untitled";
+  dateFormat: string,
+) => (template
+  ? template
+    .replace('{{current}}', currFile.basename)
+    .replace('{{field}}', field)
+    .replace('{{dir}}', dir)
+  // @ts-ignore
+    .replace('{{date}}', moment().format(dateFormat))
+  : 'Untitled');
 
 function makeFilenameUnique(filename: string) {
-  let i = 1,
-    newName = filename;
-  while (app.metadataCache.getFirstLinkpathDest(newName, "")) {
+  let i = 1;
+  let newName = filename;
+  while (app.metadataCache.getFirstLinkpathDest(newName, '')) {
     if (i === 1) newName += ` ${i}`;
-    else newName = newName.slice(0, -2) + ` ${i}`;
+    else newName = `${newName.slice(0, -2)} ${i}`;
     i++;
   }
   return newName;
@@ -36,14 +35,14 @@ async function resolveThreadingContentTemplate(
   templatePath: string,
   oppField: string,
   currFile: TFile,
-  crumb: string
+  crumb: string,
 ) {
   let newContent = crumb;
 
   if (templatePath) {
     const templateFile = app.metadataCache.getFirstLinkpathDest(
       templatePath,
-      ""
+      '',
     );
 
     const template = await app.vault.cachedRead(templateFile);
@@ -51,7 +50,7 @@ async function resolveThreadingContentTemplate(
       /\{\{BC-thread-crumb\}\}/i,
       writeBCsInline
         ? `${oppField}:: [[${currFile.basename}]]`
-        : `${oppField}: ['${currFile.basename}']`
+        : `${oppField}: ['${currFile.basename}']`,
     );
   }
   return newContent;
@@ -82,7 +81,7 @@ export async function thread(plugin: BCPlugin, field: string) {
     currFile,
     field,
     dir,
-    dateFormat
+    dateFormat,
   );
   newBasename = makeFilenameUnique(newBasename);
 
@@ -96,19 +95,19 @@ export async function thread(plugin: BCPlugin, field: string) {
     templatePath,
     oppField,
     currFile,
-    oppCrumb
+    oppCrumb,
   );
 
   const newFile = await app.vault.create(
     normalizePath(`${newFileParent.path}/${newBasename}.md`),
-    newContent
+    newContent,
   );
 
   if (!writeBCsInline) {
     const { api } = app.plugins.plugins.metaedit ?? {};
     if (!api) {
       new Notice(
-        "Metaedit must be enabled to write to yaml. Alternatively, toggle the setting `Write Breadcrumbs Inline` to use Dataview inline fields instead."
+        'Metaedit must be enabled to write to yaml. Alternatively, toggle the setting `Write Breadcrumbs Inline` to use Dataview inline fields instead.',
       );
       return;
     }
@@ -117,7 +116,7 @@ export async function thread(plugin: BCPlugin, field: string) {
       newFile.basename,
       currFile,
       app.metadataCache.getFileCache(currFile).frontmatter,
-      api
+      api,
     );
   } else {
     const crumb = `${field}:: [[${newFile.basename}]]`;
@@ -128,12 +127,11 @@ export async function thread(plugin: BCPlugin, field: string) {
       // TODO Check if this note already has this field
       let content = await app.vault.read(currFile);
       const splits = splitAtYaml(content);
-      content =
-        splits[0] +
-        (splits[0].length ? "\n" : "") +
-        crumb +
-        (splits[1].length ? "\n" : "") +
-        splits[1];
+      content = splits[0]
+        + (splits[0].length ? '\n' : '')
+        + crumb
+        + (splits[1].length ? '\n' : '')
+        + splits[1];
 
       await app.vault.modify(currFile, content);
     }
@@ -143,16 +141,16 @@ export async function thread(plugin: BCPlugin, field: string) {
     ? app.workspace.getLeaf(true)
     : app.workspace.activeLeaf;
 
-  await leaf.openFile(newFile, { active: true, state: "source" });
+  await leaf.openFile(newFile, { active: true, state: 'source' });
 
   if (templatePath) {
-    if (app.plugins.plugins["templater-obsidian"]) {
+    if (app.plugins.plugins['templater-obsidian']) {
       app.commands.executeCommandById(
-        "templater-obsidian:replace-in-file-templater"
+        'templater-obsidian:replace-in-file-templater',
       );
     } else {
       new Notice(
-        "The Templater plugin must be enabled to resolve the templates in the new note"
+        'The Templater plugin must be enabled to resolve the templates in the new note',
       );
     }
   }
@@ -162,12 +160,12 @@ export async function thread(plugin: BCPlugin, field: string) {
     const editor = leaf.view.editor as Editor;
     editor.setCursor(editor.getValue().length);
   } else {
-    const noteNameInputs = document.getElementsByClassName("view-header-title");
+    const noteNameInputs = document.getElementsByClassName('view-header-title');
 
     const newNoteInputEl = Array.from(noteNameInputs).find(
-      (input: HTMLInputElement) => input.innerText === newBasename
+      (input: HTMLInputElement) => input.innerText === newBasename,
     ) as HTMLInputElement;
-    newNoteInputEl.innerText = "";
+    newNoteInputEl.innerText = '';
     newNoteInputEl.focus();
   }
 }

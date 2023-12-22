@@ -1,6 +1,6 @@
-import { warn } from "loglevel";
-import { dropHeaderOrAlias, regNFlags, splitLinksRegex } from "../constants";
-import type { BCSettings } from "../interfaces";
+import { warn } from 'loglevel';
+import { dropHeaderOrAlias, regNFlags, splitLinksRegex } from '../constants';
+import type { BCSettings } from '../interfaces';
 
 export function sum(arr: number[]): number {
   return arr.reduce((a, b) => a + b);
@@ -11,8 +11,7 @@ export function normalise(arr: number[]): number[] {
   return arr.map((item) => item / max);
 }
 
-export const isSubset = <T>(arr1: T[], arr2: T[]): boolean =>
-  arr1.every((value) => arr2.includes(value));
+export const isSubset = <T>(arr1: T[], arr2: T[]): boolean => arr1.every((value) => arr2.includes(value));
 
 export function splitAndDrop(str: string): string[] {
   return (
@@ -22,21 +21,19 @@ export function splitAndDrop(str: string): string[] {
   );
 }
 
-export const dropPath = (path: string) => path.replace(/^.*\//, "");
-export const dropDendron = (path: string, settings: BCSettings) =>
-  settings.trimDendronNotes
-    ? path.split(settings.dendronNoteDelimiter).last()
-    : path;
+export const dropPath = (path: string) => path.replace(/^.*\//, '');
+export const dropDendron = (path: string, settings: BCSettings) => (settings.trimDendronNotes
+  ? path.split(settings.dendronNoteDelimiter).last()
+  : path);
 
-export const dropPathNDendron = (path: string, settings: BCSettings) =>
-  dropDendron(dropPath(path), settings);
+export const dropPathNDendron = (path: string, settings: BCSettings) => dropDendron(dropPath(path), settings);
 
-export const dropFolder = (path: string) =>
-  path.split("/").last().split(".").slice(0, -1).join(".");
+export const dropFolder = (path: string) => path.split('/').last().split('.').slice(0, -1)
+  .join('.');
 
 export const splitAndTrim = (fields: string): string[] => {
-  if (!fields || fields === "") return [];
-  else return fields.split(",").map((str) => str.trim());
+  if (!fields || fields === '') return [];
+  return fields.split(',').map((str) => str.trim());
 };
 
 /**
@@ -49,12 +46,11 @@ export const splitAndTrim = (fields: string): string[] => {
 export function padArray<T>(
   arr: T[],
   finalLength: number,
-  filler: string = ""
+  filler = '',
 ): (T | string)[] {
   const copy: (T | string)[] = [...arr];
   const currLength = copy.length;
-  if (currLength > finalLength)
-    throw new Error("Current length is greater than final length");
+  if (currLength > finalLength) throw new Error('Current length is greater than final length');
   else if (currLength === finalLength) return copy;
   else {
     for (let i = currLength; i < finalLength; i++) copy.push(filler);
@@ -89,7 +85,7 @@ export function transpose<T>(A: T[][]): T[][] {
  *   `last`: the index of the last element in the run
  */
 export function runs(
-  arr: string[]
+  arr: string[],
 ): { value: string; first: number; last: number }[] {
   const runs: { value: string; first: number; last: number }[] = [];
   let i = 0;
@@ -111,13 +107,13 @@ export function runs(
  * @returns `[ [ 1, 2, 3 ], [ 1, 3, 2 ], [ 2, 1, 3 ], [ 2, 3, 1 ], [ 3, 1, 2 ], [ 3, 2, 1 ] ]`
  */
 export function permute(permutation: any[]): any[][] {
-  const length = permutation.length,
-    result = [permutation.slice()],
-    c = new Array(length).fill(0);
+  const { length } = permutation;
+  const result = [permutation.slice()];
+  const c = new Array(length).fill(0);
 
-  let i = 1,
-    k: number,
-    p: number;
+  let i = 1;
+  let k: number;
+  let p: number;
 
   while (i < length) {
     if (c[i] < i) {
@@ -144,8 +140,7 @@ export const range = (n: number) => [...Array(n).keys()];
  * @param {T[]} B - the array of items that are not in A
  * @returns {T[]} None
  */
-export const complement = <T>(A: T[], B: T[]) =>
-  A.filter((a) => !B.includes(a));
+export const complement = <T>(A: T[], B: T[]) => A.filter((a) => !B.includes(a));
 
 export function swapItems<T>(i: number, j: number, arr: T[]) {
   const max = arr.length - 1;
@@ -178,5 +173,5 @@ export function strToRegex(input: string) {
 
 // Source: https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
 export function escapeRegex(string) {
-  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }

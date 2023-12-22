@@ -1,14 +1,14 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import { Modal, Notice } from "obsidian";
-import VisComp from "../Components/VisComp.svelte";
-import type { AdjListItem, d3Graph } from "../interfaces";
-import type BCPlugin from "../main";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import { Modal, Notice } from 'obsidian';
+import VisComp from '../Components/VisComp.svelte';
+import type { AdjListItem, d3Graph } from '../interfaces';
+import type BCPlugin from '../main';
 import {
   getInNeighbours,
   getOutNeighbours,
   getSinks,
-} from "../Utils/graphUtils";
+} from '../Utils/graphUtils';
 
 export function graphlibToD3(g: Graph): d3Graph {
   const d3Graph: d3Graph = { nodes: [], links: [] };
@@ -160,8 +160,7 @@ export function dfsFlatAdjList(g: Graph, startNode: string) {
         const parentId = nodeCount * nodes.indexOf(succ);
         if (
           !adjList.some(
-            (adjItem) =>
-              adjItem.name === currNode && adjItem.parentId === parentId
+            (adjItem) => adjItem.name === currNode && adjItem.parentId === parentId,
           )
         ) {
           adjList.push({
@@ -187,7 +186,7 @@ export function dfsFlatAdjList(g: Graph, startNode: string) {
   }
   adjList.push({
     id: 999999999,
-    name: "CONTAINER",
+    name: 'CONTAINER',
     parentId: undefined,
     depth: 0,
   });
@@ -201,15 +200,14 @@ export function dfsFlatAdjList(g: Graph, startNode: string) {
 
 export const stratify = d3
   .stratify()
-  .id(function (d: AdjListItem) {
+  .id((d: AdjListItem) => {
     console.log({ d });
     return d.name;
   })
-  .parentId(function (d: AdjListItem) {
-    return d.parentId;
-  });
+  .parentId((d: AdjListItem) => d.parentId);
 export class VisModal extends Modal {
   plugin: BCPlugin;
+
   modal: VisModal;
 
   constructor(plugin: BCPlugin) {
@@ -220,7 +218,7 @@ export class VisModal extends Modal {
 
   onOpen() {
     new Notice(
-      "Alot of these features may not work, it is still very experimental."
+      'Alot of these features may not work, it is still very experimental.',
     );
     const { contentEl } = this;
     contentEl.empty();

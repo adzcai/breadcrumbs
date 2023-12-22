@@ -5,11 +5,11 @@ import {
   EditorSuggestContext,
   EditorSuggestTriggerInfo,
   TFile,
-} from "obsidian";
-import { isInsideYaml } from "./Utils/ObsidianUtils";
-import type BCPlugin from "./main";
-import { escapeRegex } from "./Utils/generalUtils";
-import { getFields } from "./Utils/HierUtils";
+} from 'obsidian';
+import { isInsideYaml } from './Utils/ObsidianUtils';
+import type BCPlugin from './main';
+import { escapeRegex } from './Utils/generalUtils';
+import { getFields } from './Utils/HierUtils';
 
 export class RelationSuggestor extends EditorSuggest<string> {
   plugin: BCPlugin;
@@ -22,7 +22,7 @@ export class RelationSuggestor extends EditorSuggest<string> {
   onTrigger(
     cursor: EditorPosition,
     editor: Editor,
-    _: TFile
+    _: TFile,
   ): EditorSuggestTriggerInfo | null {
     const trig = this.plugin.settings.relSuggestorTrigger;
     const sub = editor.getLine(cursor.line).substring(0, cursor.ch);
@@ -50,22 +50,22 @@ export class RelationSuggestor extends EditorSuggest<string> {
   renderSuggestion(suggestion: string, el: HTMLElement): void {
     el.createDiv({
       text: suggestion,
-      cls: "codeblock-suggestion",
+      cls: 'codeblock-suggestion',
     });
   }
 
   selectSuggestion(suggestion: string): void {
     const { context, plugin } = this;
-    if (!context) return
+    if (!context) return;
 
     const trig = plugin.settings.relSuggestorTrigger;
     const { start, end, editor } = context;
 
-    const replacement = suggestion + (isInsideYaml() ? ": " : ":: ") + '[[';
+    const replacement = `${suggestion + (isInsideYaml() ? ': ' : ':: ')}[[`;
     editor.replaceRange(
       replacement,
       { ch: start.ch + 1 - trig.length, line: start.line },
-      end
+      end,
     );
   }
 }

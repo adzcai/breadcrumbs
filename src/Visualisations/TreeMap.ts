@@ -1,16 +1,16 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import type { TFile } from "obsidian";
-import { openOrSwitch } from "obsidian-community-lib";
-import type { VisModal } from "./VisModal";
-import { dfsFlatAdjList } from "./VisModal";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import type { TFile } from 'obsidian';
+import { openOrSwitch } from 'obsidian-community-lib';
+import type { VisModal } from './VisModal';
+import { dfsFlatAdjList } from './VisModal';
 
 export const treeMap = (
   graph: Graph,
   currFile: TFile,
   modal: VisModal,
   width: number,
-  height: number
+  height: number,
 ) => {
   const flatAdj = dfsFlatAdjList(graph, currFile.basename);
   console.log({ flatAdj });
@@ -24,25 +24,25 @@ export const treeMap = (
     .size([width, height])
     .padding(1)
     .round(true)(
-      hierarchy.sum((d) => d.height).sort((a, b) => b.height - a.height)
+      hierarchy.sum((d) => d.height).sort((a, b) => b.height - a.height),
     );
 
   //   const root = treemap(data);
 
   const svg = d3
-    .select(".d3-graph")
-    .append("svg")
-    .attr("height", height)
-    .attr("width", width)
-    .style("font", "10px sans-serif");
+    .select('.d3-graph')
+    .append('svg')
+    .attr('height', height)
+    .attr('width', width)
+    .style('font', '10px sans-serif');
 
   const leaf = svg
-    .selectAll("g")
+    .selectAll('g')
     .data(root.leaves())
-    .join("g")
-    .attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+    .join('g')
+    .attr('transform', (d) => `translate(${d.x0},${d.y0})`);
 
-  leaf.attr("aria-label", (d) => d.data.name);
+  leaf.attr('aria-label', (d) => d.data.name);
 
   //   leaf.append("title").text(
   //     (d) =>
@@ -56,20 +56,20 @@ export const treeMap = (
   const color = d3.scaleOrdinal(d3.schemeCategory10);
 
   leaf
-    .append("rect")
+    .append('rect')
     // .attr("id", (d) => (d.leafUid = DOM.uid("leaf")).id)
-    .attr("fill", (d) => {
+    .attr('fill', (d) => {
       while (d.depth > 1) d = d.parent;
       return color(d.data.id);
     })
-    .attr("fill-opacity", 0.6)
-    .attr("width", (d) => d.x1 - d.x0)
-    .attr("height", (d) => d.y1 - d.y0);
+    .attr('fill-opacity', 0.6)
+    .attr('width', (d) => d.x1 - d.x0)
+    .attr('height', (d) => d.y1 - d.y0);
 
   leaf
-    .append("clipPath")
+    .append('clipPath')
     // .attr("id", (d) => (d.clipUid = DOM.uid("clip")).id)
-    .append("use");
+    .append('use');
   // .attr("xlink:href", (d) => d.leafUid.href);
 
   //   leaf
@@ -95,13 +95,13 @@ export const treeMap = (
     openOrSwitch(dest, event);
     modal.close();
   };
-  leaf.on("click", (event: MouseEvent, d) => {
+  leaf.on('click', (event: MouseEvent, d) => {
     console.log({ d });
     nodeClick(event, d.data.name);
   });
 
   function zoomed({ transform }) {
-    svg.attr("transform", transform);
+    svg.attr('transform', transform);
   }
   svg.call(
     d3
@@ -111,6 +111,6 @@ export const treeMap = (
         [width, height],
       ])
       .scaleExtent([0.5, 8])
-      .on("zoom", zoomed)
+      .on('zoom', zoomed),
   );
 };

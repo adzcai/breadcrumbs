@@ -1,22 +1,22 @@
-import type { MultiGraph } from "graphology";
-import { info } from "loglevel";
-import { BC_IGNORE, BC_REGEX_NOTE, BC_REGEX_NOTE_FIELD } from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
-import { strToRegex } from "../Utils/generalUtils";
+import type { MultiGraph } from 'graphology';
+import { info } from 'loglevel';
+import { BC_IGNORE, BC_REGEX_NOTE, BC_REGEX_NOTE_FIELD } from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
+import { strToRegex } from '../Utils/generalUtils';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { getDVBasename } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
 
 export function addRegexNotesToGraph(
   plugin: BCPlugin,
   eligableAlts: dvFrontmatterCache[],
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { userHiers, regexNoteField } = settings;
@@ -30,15 +30,13 @@ export function addRegexNotesToGraph(
     info({ regex });
 
     let field = altFile[BC_REGEX_NOTE_FIELD] as string;
-    if (typeof field !== "string" || !fields.includes(field))
-      field = regexNoteField || fields[0];
+    if (typeof field !== 'string' || !fields.includes(field)) field = regexNoteField || fields[0];
 
     const targets = [];
     frontms.forEach((page) => {
       if (page[BC_IGNORE]) return;
       const basename = getDVBasename(page.file);
-      if (basename !== regexNoteBasename && regex.test(basename))
-        targets.push(basename);
+      if (basename !== regexNoteBasename && regex.test(basename)) targets.push(basename);
     });
 
     for (const target of targets) {
@@ -52,7 +50,7 @@ export function addRegexNotesToGraph(
         target,
         sourceOrder,
         targetOrder,
-        true
+        true,
       );
     }
   });

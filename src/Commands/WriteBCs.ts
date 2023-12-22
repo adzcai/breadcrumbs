@@ -1,8 +1,8 @@
-import { warn } from "loglevel";
-import { Notice, TFile } from "obsidian";
-import type BCPlugin from "../main";
-import { getOppFields } from "../Utils/HierUtils";
-import { changeYaml, getCurrFile, splitAtYaml } from "../Utils/ObsidianUtils";
+import { warn } from 'loglevel';
+import { Notice, TFile } from 'obsidian';
+import type BCPlugin from '../main';
+import { getOppFields } from '../Utils/HierUtils';
+import { changeYaml, getCurrFile, splitAtYaml } from '../Utils/ObsidianUtils';
 
 export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
   const { settings, mainG } = plugin;
@@ -23,18 +23,17 @@ export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
     const [yaml, afterYaml] = splitAtYaml(content);
 
     if (!writeBCsInline) {
-      const inner = yaml === "" ? yaml : yaml.slice(4, -4);
+      const inner = yaml === '' ? yaml : yaml.slice(4, -4);
       const newYaml = changeYaml(inner, field, succ);
       const newContent = `---\n${newYaml}\n---${afterYaml}`;
       await app.vault.modify(file, newContent);
     } else {
       // TODO Check if this note already has this field
-      const newContent =
-        yaml +
-        (yaml.length ? "\n" : "") +
-        `${field}:: [[${succ}]]` +
-        (afterYaml.length ? "\n" : "") +
-        afterYaml;
+      const newContent = `${yaml
+        + (yaml.length ? '\n' : '')
+      }${field}:: [[${succ}]]${
+        afterYaml.length ? '\n' : ''
+      }${afterYaml}`;
 
       await app.vault.modify(file, newContent);
     }
@@ -44,22 +43,22 @@ export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
 export async function writeBCsToAllFiles(plugin: BCPlugin) {
   if (!plugin.settings.showWriteAllBCsCmd) {
     new Notice(
-      "You first need to enable this command in Breadcrumbs' settings."
+      "You first need to enable this command in Breadcrumbs' settings.",
     );
     return;
   }
   if (
     window.confirm(
-      "This action will write the implied Breadcrumbs of each file to that file.\nIt uses the MetaEdit plugins API to update the YAML, so it should only affect that frontmatter of your note.\nI can't promise that nothing bad will happen. **This operation cannot be undone**."
+      "This action will write the implied Breadcrumbs of each file to that file.\nIt uses the MetaEdit plugins API to update the YAML, so it should only affect that frontmatter of your note.\nI can't promise that nothing bad will happen. **This operation cannot be undone**.",
     )
   ) {
     if (
       window.confirm(
-        "Are you sure? You have been warned that this operation will attempt to update all files with implied breadcrumbs."
+        'Are you sure? You have been warned that this operation will attempt to update all files with implied breadcrumbs.',
       )
     ) {
-      if (window.confirm("For real, please make a back up before.")) {
-        const notice = new Notice("Operation Started");
+      if (window.confirm('For real, please make a back up before.')) {
+        const notice = new Notice('Operation Started');
         const problemFiles = [];
         for (const file of app.vault.getMarkdownFiles()) {
           try {
@@ -68,10 +67,10 @@ export async function writeBCsToAllFiles(plugin: BCPlugin) {
             problemFiles.push(file.path);
           }
         }
-        notice.setMessage("Operation Complete");
+        notice.setMessage('Operation Complete');
         if (problemFiles.length) {
           new Notice(
-            "Some files were not updated due to errors. Check the console to see which ones."
+            'Some files were not updated due to errors. Check the console to see which ones.',
           );
           warn({ problemFiles });
         }

@@ -1,24 +1,24 @@
-import type { MultiGraph } from "graphology";
-import { TFile, TFolder } from "obsidian";
+import type { MultiGraph } from 'graphology';
+import { TFile, TFolder } from 'obsidian';
 import {
   BC_FOLDER_NOTE,
   BC_FOLDER_NOTE_RECURSIVE,
   BC_FOLDER_NOTE_SUBFOLDERS,
   BC_IGNORE,
-} from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
+} from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { getDVBasename, getFolderName } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { getDVBasename, getFolderName } from '../Utils/ObsidianUtils';
 
 const getSubsFromFolder = (folder: TFolder) => {
-  const otherNotes: TFile[] = [],
-    subFolders: TFolder[] = [];
+  const otherNotes: TFile[] = [];
+  const subFolders: TFolder[] = [];
   folder.children.forEach((tAbstract) => {
     if (tAbstract instanceof TFile) otherNotes.push(tAbstract);
     else subFolders.push(tAbstract as TFolder);
@@ -30,7 +30,7 @@ export function addFolderNotesToGraph(
   plugin: BCPlugin,
   folderNotes: dvFrontmatterCache[],
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { userHiers } = settings;
@@ -45,13 +45,12 @@ export function addFolderNotesToGraph(
     const targets = frontms
       .map((ff) => ff.file)
       .filter(
-        (other) =>
-          getFolderName(other) === topFolderName && other.path !== file.path && !other[BC_IGNORE]
+        (other) => getFolderName(other) === topFolderName && other.path !== file.path && !other[BC_IGNORE],
       )
       .map(getDVBasename);
 
     const field = altFile[BC_FOLDER_NOTE] as string;
-    if (typeof field !== "string" || !fields.includes(field)) return;
+    if (typeof field !== 'string' || !fields.includes(field)) return;
 
     targets.forEach((target) => {
       // This is getting the order of the folder note, not the source pointing up to it
@@ -65,17 +64,16 @@ export function addFolderNotesToGraph(
         target,
         sourceOrder,
         targetOrder,
-        true
+        true,
       );
     });
 
     if (altFile[BC_FOLDER_NOTE_SUBFOLDERS]) {
       const subfolderField = altFile[BC_FOLDER_NOTE_SUBFOLDERS] as string;
       if (
-        typeof subfolderField !== "string" ||
-        !fields.includes(subfolderField)
-      )
-        return;
+        typeof subfolderField !== 'string'
+        || !fields.includes(subfolderField)
+      ) return;
 
       const { subFolders } = getSubsFromFolder(topFolder);
 
@@ -92,7 +90,7 @@ export function addFolderNotesToGraph(
               childBasename,
               9999,
               9999,
-              true
+              true,
             );
           }
         });
@@ -125,7 +123,7 @@ export function addFolderNotesToGraph(
           folderNote,
           sourceOrder,
           targetOrder,
-          true
+          true,
         );
 
         targets.forEach((target) => {
@@ -141,7 +139,7 @@ export function addFolderNotesToGraph(
             target,
             sourceOrder,
             targetOrder,
-            true
+            true,
           );
         });
 

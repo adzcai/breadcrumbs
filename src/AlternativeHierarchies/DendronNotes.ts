@@ -1,21 +1,20 @@
-import type { MultiGraph } from "graphology";
-import { BC_IGNORE, BC_IGNORE_DENDRON } from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
+import type { MultiGraph } from 'graphology';
+import { BC_IGNORE, BC_IGNORE_DENDRON } from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getDVBasename } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
 
-const getDendronParent = (dendron: string, splitter: string) =>
-  dendron.split(splitter).slice(0, -1).join(splitter);
+const getDendronParent = (dendron: string, splitter: string) => dendron.split(splitter).slice(0, -1).join(splitter);
 
 export function addDendronNotesToGraph(
   plugin: BCPlugin,
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { addDendronNotes, dendronNoteDelimiter, dendronNoteField } = settings;
@@ -27,9 +26,9 @@ export function addDendronNotesToGraph(
     let curr = getDVBasename(frontm.file);
     let parent = getDendronParent(curr, dendronNoteDelimiter);
 
-    while (parent !== "") {
+    while (parent !== '') {
       const parentFile = frontms.find(
-        (fm) => getDVBasename(fm.file) === parent
+        (fm) => getDVBasename(fm.file) === parent,
       );
 
       // !parentFile implies a "stub"
@@ -43,7 +42,7 @@ export function addDendronNotesToGraph(
           parent,
           9999,
           9999,
-          true
+          true,
         );
       }
       curr = parent;

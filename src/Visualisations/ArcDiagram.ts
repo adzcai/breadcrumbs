@@ -1,25 +1,27 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import type { TFile } from "obsidian";
-import type { d3Node } from "../interfaces";
-import { graphlibToD3, VisModal } from "./VisModal";
-import { openOrSwitch } from "obsidian-community-lib";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import type { TFile } from 'obsidian';
+import { openOrSwitch } from 'obsidian-community-lib';
+import type { d3Node } from '../interfaces';
+import { graphlibToD3, VisModal } from './VisModal';
 
 export const arcDiagram = (
   graph: Graph,
   currFile: TFile,
   modal: VisModal,
   width: number,
-  height: number
+  height: number,
 ) => {
   const data = graphlibToD3(graph);
 
-  const margin = { top: 20, right: 20, bottom: 20, left: 150 };
+  const margin = {
+    top: 20, right: 20, bottom: 20, left: 150,
+  };
   const svg = d3
-    .select(".d3-graph")
-    .append("svg")
-    .attr("height", height)
-    .attr("width", width);
+    .select('.d3-graph')
+    .append('svg')
+    .attr('height', height)
+    .attr('width', width);
 
   const nodes = data.nodes.map(({ id, name }) => ({
     id,
@@ -41,7 +43,7 @@ export const arcDiagram = (
     target.targetLinks.push(link);
   }
 
-  svg.append("style").text(`
+  svg.append('style').text(`
 
 path {
   stroke: #808080;
@@ -84,39 +86,37 @@ text {
   ]);
 
   const label = svg
-    .append("g")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 10)
-    .attr("text-anchor", "end")
-    .selectAll("g")
+    .append('g')
+    .attr('font-family', 'sans-serif')
+    .attr('font-size', 10)
+    .attr('text-anchor', 'end')
+    .selectAll('g')
     .data(nodes)
-    .join("g")
-    .attr("transform", (d) => `translate(${margin.left},${(d.y = y(d.name))})`)
-    .call((g) =>
-      g
-        .append("text")
-        .attr("x", -6)
-        .attr("dy", "0.35em")
-        // .attr("fill", (d) => d3.lab(color(d.group)).darker(2))
-        .text((d) => d.name)
-    )
+    .join('g')
+    .attr('transform', (d) => `translate(${margin.left},${(d.y = y(d.name))})`)
+    .call((g) => g
+      .append('text')
+      .attr('x', -6)
+      .attr('dy', '0.35em')
+    // .attr("fill", (d) => d3.lab(color(d.group)).darker(2))
+      .text((d) => d.name))
     .call(
-      (g) => g.append("circle").attr("r", 3)
+      (g) => g.append('circle').attr('r', 3),
       // .attr("fill", (d) => color(d.group))
     );
 
   const path = svg
-    .insert("g", "*")
-    .attr("fill", "none")
-    .attr("stroke-opacity", 0.6)
-    .attr("stroke-width", 1.5)
-    .selectAll("path")
+    .insert('g', '*')
+    .attr('fill', 'none')
+    .attr('stroke-opacity', 0.6)
+    .attr('stroke-width', 1.5)
+    .selectAll('path')
     .data(links)
-    .join("path")
+    .join('path')
     // .attr("stroke", (d) =>
     //   d.source.group === d.target.group ? color(d.source.group) : "#aaa"
     // )
-    .attr("d", arc);
+    .attr('d', arc);
 
   const step = 104;
 
@@ -126,36 +126,35 @@ text {
   };
 
   const overlay = svg
-    .append("g")
-    .attr("fill", "none")
-    .attr("pointer-events", "all")
-    .selectAll("rect")
+    .append('g')
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .selectAll('rect')
     .data(nodes)
-    .join("rect")
-    .attr("width", margin.left + 40)
-    .attr("height", step)
-    .attr("y", (d) => y(d.name) - step / 2)
-    .on("mouseover", (d) => {
-      svg.classed("hover", true);
-      label.classed("primary", (n) => n === d);
+    .join('rect')
+    .attr('width', margin.left + 40)
+    .attr('height', step)
+    .attr('y', (d) => y(d.name) - step / 2)
+    .on('mouseover', (d) => {
+      svg.classed('hover', true);
+      label.classed('primary', (n) => n === d);
       label.classed(
-        "secondary",
-        (n) =>
-          n.sourceLinks.some((l) => l.target === d) ||
-          n.targetLinks.some((l) => l.source === d)
+        'secondary',
+        (n) => n.sourceLinks.some((l) => l.target === d)
+          || n.targetLinks.some((l) => l.source === d),
       );
       path
-        .classed("primary", (l) => l.source === d || l.target === d)
-        .filter(".primary")
+        .classed('primary', (l) => l.source === d || l.target === d)
+        .filter('.primary')
         .raise();
     })
-    .on("mouseout", (d) => {
-      svg.classed("hover", false);
-      label.classed("primary", false);
-      label.classed("secondary", false);
-      path.classed("primary", false).order();
+    .on('mouseout', (d) => {
+      svg.classed('hover', false);
+      label.classed('primary', false);
+      label.classed('secondary', false);
+      path.classed('primary', false).order();
     })
-    .on("click", (event: MouseEvent, d: d3Node) => {
+    .on('click', (event: MouseEvent, d: d3Node) => {
       nodeClick(event, d.name);
     });
 
@@ -189,11 +188,11 @@ text {
     const y2 = d.target.y;
     const r = Math.abs(y2 - y1) / 2;
     return `M${margin.left},${y1}A${r},${r} 0,0,${y1 < y2 ? 1 : 0} ${margin.left
-      },${y2}`;
+    },${y2}`;
   }
 
   function zoomed({ transform }) {
-    svg.attr("transform", transform);
+    svg.attr('transform', transform);
   }
   svg.call(
     d3
@@ -203,6 +202,6 @@ text {
         [width, height],
       ])
       .scaleExtent([0.5, 8])
-      .on("zoom", zoomed)
+      .on('zoom', zoomed),
   );
 };

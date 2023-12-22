@@ -1,9 +1,9 @@
-import { cloneDeep } from "lodash";
-import { info } from "loglevel";
-import { copy } from "obsidian-community-lib/dist/utils";
-import type BCPlugin from "../main";
-import { dfsAllPaths, getSinks, getSubInDirs } from "../Utils/graphUtils";
-import { getCurrFile, makeWiki } from "../Utils/ObsidianUtils";
+import { cloneDeep } from 'lodash';
+import { info } from 'loglevel';
+import { copy } from 'obsidian-community-lib/dist/utils';
+import type BCPlugin from '../main';
+import { dfsAllPaths, getSinks, getSubInDirs } from '../Utils/graphUtils';
+import { getCurrFile, makeWiki } from '../Utils/ObsidianUtils';
 
 /**
  * Returns a copy of `index`, doesn't mutate.
@@ -12,15 +12,15 @@ import { getCurrFile, makeWiki } from "../Utils/ObsidianUtils";
 export function addAliasesToIndex(plugin: BCPlugin, index: string) {
   const { aliasesInIndex } = plugin.settings;
 
-  const lines = index.slice().split("\n");
+  const lines = index.slice().split('\n');
 
   if (aliasesInIndex) {
     for (let line of lines) {
-      const [indent, ...content] = line.split("- ");
-      const note = content.join("- ");
+      const [indent, ...content] = line.split('- ');
+      const note = content.join('- ');
       if (!note) continue;
 
-      const currFile = app.metadataCache.getFirstLinkpathDest(note, "");
+      const currFile = app.metadataCache.getFirstLinkpathDest(note, '');
 
       if (currFile !== null) {
         const cache = app.metadataCache.getFileCache(currFile);
@@ -30,12 +30,12 @@ export function addAliasesToIndex(plugin: BCPlugin, index: string) {
 
         const allAliases: string[] = [...[alias].flat(3), ...[aliases].flat(3)];
         if (allAliases.length) {
-          line += ` (${allAliases.join(", ")})`;
+          line += ` (${allAliases.join(', ')})`;
         }
       }
     }
   }
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 /**
@@ -47,9 +47,9 @@ export function addAliasesToIndex(plugin: BCPlugin, index: string) {
 export function createIndex(
   allPaths: string[][],
   asWikilinks: boolean,
-  indent = "  "
+  indent = '  ',
 ): string {
-  let index = "";
+  let index = '';
   const copy = cloneDeep(allPaths);
   const reversed = copy.map((path) => path.reverse());
   reversed.forEach((path) => path.shift());
@@ -66,12 +66,12 @@ export function createIndex(
 
       // If that node has been visited before at the current depth
       if (
-        visited.hasOwnProperty(currNode) &&
-        visited[currNode].includes(depth)
-      ) continue
+        visited.hasOwnProperty(currNode)
+        && visited[currNode].includes(depth)
+      ) continue;
       else {
         index += `${realIndent.repeat(depth)}- ${asWikilinks ? makeWiki(currNode) : currNode
-          }\n`;
+        }\n`;
 
         if (!visited.hasOwnProperty(currNode)) visited[currNode] = [];
         visited[currNode].push(depth);
@@ -84,9 +84,9 @@ export function createIndex(
 export async function copyLocalIndex(plugin: BCPlugin) {
   const { settings, closedG } = plugin;
   const { wikilinkIndex, createIndexIndent } = settings;
-  const { basename } = getCurrFile()
+  const { basename } = getCurrFile();
 
-  const onlyDowns = getSubInDirs(closedG, "down");
+  const onlyDowns = getSubInDirs(closedG, 'down');
   const allPaths = dfsAllPaths(onlyDowns, basename);
   const index = addAliasesToIndex(plugin, createIndex(allPaths, wikilinkIndex, createIndexIndent));
 
@@ -98,17 +98,17 @@ export async function copyGlobalIndex(plugin: BCPlugin) {
   const { settings, closedG } = plugin;
   const { wikilinkIndex, createIndexIndent } = settings;
 
-  const onlyDowns = getSubInDirs(closedG, "down");
-  const onlyUps = getSubInDirs(closedG, "up");
+  const onlyDowns = getSubInDirs(closedG, 'down');
+  const onlyUps = getSubInDirs(closedG, 'up');
 
   const sinks = getSinks(onlyUps);
 
-  let globalIndex = "";
+  let globalIndex = '';
   sinks.forEach((terminal) => {
-    globalIndex += terminal + "\n";
+    globalIndex += `${terminal}\n`;
     const allPaths = dfsAllPaths(onlyDowns, terminal);
-    globalIndex +=
-      addAliasesToIndex(plugin, createIndex(allPaths, wikilinkIndex, createIndexIndent)) + "\n";
+    globalIndex
+      += `${addAliasesToIndex(plugin, createIndex(allPaths, wikilinkIndex, createIndexIndent))}\n`;
   });
 
   info({ globalIndex });
@@ -117,15 +117,14 @@ export async function copyGlobalIndex(plugin: BCPlugin) {
 
 export const indexToLinePairs = (
   index: string,
-  flat = false
-): [string, string][] =>
-  index
-    .split("\n")
-    .map((line) => {
-      const [indent, ...content] = line.split("- ");
-      return [flat ? "" : indent, content.join("- ")] as [
-        string,
-        string
-      ];
-    })
-    .filter((pair) => pair[1] !== "");
+  flat = false,
+): [string, string][] => index
+  .split('\n')
+  .map((line) => {
+    const [indent, ...content] = line.split('- ');
+    return [flat ? '' : indent, content.join('- ')] as [
+      string,
+      string,
+    ];
+  })
+  .filter((pair) => pair[1] !== '');

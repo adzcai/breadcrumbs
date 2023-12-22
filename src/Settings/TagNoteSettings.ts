@@ -1,30 +1,29 @@
-import { DropdownComponent, Setting } from "obsidian";
-import type BCPlugin from "../main";
-import { refreshIndex } from "../refreshIndex";
-import { getFields } from "../Utils/HierUtils";
-import { fragWithHTML, subDetails } from "./BreadcrumbsSettingTab";
+import { DropdownComponent, Setting } from 'obsidian';
+import type BCPlugin from '../main';
+import { refreshIndex } from '../refreshIndex';
+import { getFields } from '../Utils/HierUtils';
+import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
 
 export function addTagNoteSettings(
   plugin: BCPlugin,
-  alternativeHierarchyDetails: HTMLDetailsElement
+  alternativeHierarchyDetails: HTMLDetailsElement,
 ) {
   const { settings } = plugin;
-  const tagNoteDetails = subDetails("Tag Notes", alternativeHierarchyDetails);
+  const tagNoteDetails = subDetails('Tag Notes', alternativeHierarchyDetails);
 
   new Setting(tagNoteDetails)
-    .setName("Default Tag Note Field")
+    .setName('Default Tag Note Field')
     .setDesc(
       fragWithHTML(
-        "By default, tag notes use the first field in your hierarchies (usually an <code>↑</code> field). Choose a different one to use by default, without having to specify <code>BC-tag-note-field: {field}</code>.</br>If you don't want to choose a default, select the blank option at the bottom of the list."
-      )
+        "By default, tag notes use the first field in your hierarchies (usually an <code>↑</code> field). Choose a different one to use by default, without having to specify <code>BC-tag-note-field: {field}</code>.</br>If you don't want to choose a default, select the blank option at the bottom of the list.",
+      ),
     )
     .addDropdown((dd: DropdownComponent) => {
-
       const options = {};
       getFields(settings.userHiers).forEach(
-        (field) => (options[field] = field)
+        (field) => (options[field] = field),
       );
-      dd.addOptions(Object.assign(options, { "": "" }))
+      dd.addOptions(Object.assign(options, { '': '' }))
         .setValue(settings.tagNoteField)
         .onChange(async (field) => {
           settings.tagNoteField = field;

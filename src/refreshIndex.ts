@@ -1,23 +1,26 @@
-import { MultiGraph } from "graphology";
-import { debug, error } from "loglevel";
-import { normalizePath, Notice, Pos, TFile, TFolder } from "obsidian";
-import { addCSVCrumbs, getCSVRows } from "./AlternativeHierarchies/CSVCrumbs";
-import { addDataviewNotesToGraph } from "./AlternativeHierarchies/DataviewNotes";
-import { addDateNotesToGraph } from "./AlternativeHierarchies/DateNotes";
-import { addDendronNotesToGraph } from "./AlternativeHierarchies/DendronNotes";
-import { addFolderNotesToGraph } from "./AlternativeHierarchies/FolderNotes";
+import { MultiGraph } from 'graphology';
+import { debug, error } from 'loglevel';
+import {
+  normalizePath, Notice, type Pos, TFile, TFolder,
+} from 'obsidian';
+import type { DataArray } from 'obsidian-dataview/lib/api/data-array';
+import { addCSVCrumbs, getCSVRows } from './AlternativeHierarchies/CSVCrumbs';
+import { addDataviewNotesToGraph } from './AlternativeHierarchies/DataviewNotes';
+import { addDateNotesToGraph } from './AlternativeHierarchies/DateNotes';
+import { addDendronNotesToGraph } from './AlternativeHierarchies/DendronNotes';
+import { addFolderNotesToGraph } from './AlternativeHierarchies/FolderNotes';
 import {
   addHNsToGraph,
-  getHierarchyNoteItems
-} from "./AlternativeHierarchies/HierarchyNotes/HierarchyNotes";
+  getHierarchyNoteItems,
+} from './AlternativeHierarchies/HierarchyNotes/HierarchyNotes';
 import {
   addJugglLinksToGraph,
-  getJugglLinks
-} from "./AlternativeHierarchies/JugglLinks";
-import { addLinkNotesToGraph } from "./AlternativeHierarchies/LinkNotes";
-import { addRegexNotesToGraph } from "./AlternativeHierarchies/RegexNotes";
-import { addTagNotesToGraph } from "./AlternativeHierarchies/TagNotes";
-import { addTraverseNotesToGraph } from "./AlternativeHierarchies/TraverseNotes";
+  getJugglLinks,
+} from './AlternativeHierarchies/JugglLinks';
+import { addLinkNotesToGraph } from './AlternativeHierarchies/LinkNotes';
+import { addRegexNotesToGraph } from './AlternativeHierarchies/RegexNotes';
+import { addTagNotesToGraph } from './AlternativeHierarchies/TagNotes';
+import { addTraverseNotesToGraph } from './AlternativeHierarchies/TraverseNotes';
 import {
   BC_ALTS,
   BC_DV_NOTE,
@@ -26,38 +29,39 @@ import {
   BC_TAG_NOTE,
   BC_TRAVERSE_NOTE,
   dropHeaderOrAlias,
-  splitLinksRegex
-} from "./constants";
+  splitLinksRegex,
+} from './constants';
 import type {
   dvFrontmatterCache,
   dvLink,
-  RawValue
-} from "./interfaces";
-import type BCPlugin from "./main";
-import { addAuntsUncles, addCousins, addSiblingsFromSameParent, addSiblingsParentIsParent, addStructuralEquivalenceSiblings } from "./Relations";
+  RawValue,
+} from './interfaces';
+import type BCPlugin from './main';
+import {
+  addAuntsUncles, addCousins, addSiblingsFromSameParent, addSiblingsParentIsParent, addStructuralEquivalenceSiblings,
+} from './Relations';
 import {
   addNodesIfNot,
   buildObsGraph,
   getReflexiveClosure,
   getSourceOrder,
   getTargetOrder,
-  populateMain
-} from "./Utils/graphUtils";
-import { iterateHiers } from "./Utils/HierUtils";
+  populateMain,
+} from './Utils/graphUtils';
+import { iterateHiers } from './Utils/HierUtils';
 import {
   getBaseFromMDPath,
   getDVApi,
-  getDVBasename
-} from "./Utils/ObsidianUtils";
-import { drawTrail } from "./Views/TrailView";
-import type { DataArray } from "obsidian-dataview/lib/api/data-array";
+  getDVBasename,
+} from './Utils/ObsidianUtils';
+import { drawTrail } from './Views/TrailView';
 
 function getDVMetadataCache(plugin: BCPlugin) {
   const { db } = plugin;
   const api = getDVApi(plugin);
 
-  db.start1G("getDVMetadataCache");
-  const frontms = api.pages().values
+  db.start1G('getDVMetadataCache');
+  const frontms = api.pages().values;
   db.end1G({ frontms });
 
   return frontms;
@@ -65,11 +69,11 @@ function getDVMetadataCache(plugin: BCPlugin) {
 
 function getObsMetadataCache(plugin: BCPlugin, files: TFile[]) {
   const { db } = plugin;
-  db.start1G("getObsMetadataCache");
+  db.start1G('getObsMetadataCache');
 
   const frontms: dvFrontmatterCache[] = files.map((file) => {
-    const { frontmatter } = app.metadataCache.getFileCache(file);
-    return frontmatter ? { file, ...frontmatter } : { file };
+    const cachedMetadata = app.metadataCache.getFileCache(file);
+    return cachedMetadata ? { file, ...cachedMetadata.frontmatter } : { file };
   });
 
   db.end1G({ frontms });
@@ -77,7 +81,7 @@ function getObsMetadataCache(plugin: BCPlugin, files: TFile[]) {
 }
 
 function isDVProxy(item: RawValue | DataArray<RawValue>): item is DataArray<RawValue> {
-  return typeof (item as DataArray<RawValue>).defaultComparator === "function";
+  return typeof (item as DataArray<RawValue>).defaultComparator === 'function';
 }
 
 /**
@@ -97,21 +101,18 @@ function unproxy(item: RawValue) {
   return unproxied;
 }
 
-
 /**
  * Given a `dvCache[field]` value, parse the link(s) out of it
  * @param {string | string[] | string[][] | dvLink | dvLink[] | Pos | TFile} value
  */
 function parseFieldValue(
-  value: string | string[] | string[][] | dvLink | dvLink[] | Pos | TFile
+  value: string | string[] | string[][] | dvLink | dvLink[] | Pos | TFile,
 ) {
   if (!value) return [];
 
-
   const parsed: string[] = [];
   try {
-
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       const splits = value.match(splitLinksRegex);
 
       if (splits !== null) {
@@ -127,17 +128,15 @@ function parseFieldValue(
 
         const unProxied = unproxy(rawItem);
         unProxied.forEach((value) => {
-          if (typeof value === "string" || typeof value === "number") {
+          if (typeof value === 'string' || typeof value === 'number') {
             const rawAsString = value.toString();
             const splits = rawAsString.match(splitLinksRegex);
             if (splits !== null) {
-              const strs = splits.map((link) =>
-                getBaseFromMDPath(link.match(dropHeaderOrAlias)[1])
-              );
+              const strs = splits.map((link) => getBaseFromMDPath(link.match(dropHeaderOrAlias)[1]));
               parsed.push(...strs);
             } else {
               const basename = getBaseFromMDPath(rawAsString);
-              parsed.push(basename.split("#")[0].split("|")[0]);
+              parsed.push(basename.split('#')[0].split('|')[0]);
             }
           } else if (value.path !== undefined) {
             const basename = getBaseFromMDPath(value.path);
@@ -157,20 +156,21 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
   const mainG = new MultiGraph();
   try {
     const { settings, db } = plugin;
-    const { userHiers, CSVPaths, parseJugglLinksWithoutJuggl, hierarchyNotes } =
-      settings;
-    db.start2G("initGraphs");
+    const {
+      userHiers, CSVPaths, parseJugglLinksWithoutJuggl, hierarchyNotes,
+    } = settings;
+    db.start2G('initGraphs');
 
     if (userHiers.length === 0) {
       db.end2G();
-      new Notice("You do not have any Breadcrumbs hierarchies set up.");
+      new Notice('You do not have any Breadcrumbs hierarchies set up.');
       return mainG;
     }
 
     const files = app.vault.getMarkdownFiles();
-    const dvQ = app.plugins.enabledPlugins.has("dataview");
+    const dvQ = app.plugins.enabledPlugins.has('dataview');
 
-    let frontms: dvFrontmatterCache[] = dvQ
+    const frontms: dvFrontmatterCache[] = dvQ
       ? getDVMetadataCache(plugin)
       : getObsMetadataCache(plugin, files);
 
@@ -181,16 +181,15 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
     //     : getObsMetadataCache(plugin, files);
     // }
 
-    const CSVRows = CSVPaths !== "" ? await getCSVRows(plugin) : [];
+    const CSVRows = CSVPaths !== '' ? await getCSVRows(plugin) : [];
 
     const eligableAlts: { [altField: string]: dvFrontmatterCache[] } = {};
     BC_ALTS.forEach((alt) => (eligableAlts[alt] = []));
 
-    db.start2G("addFrontmatterToGraph");
+    db.start2G('addFrontmatterToGraph');
     frontms.forEach((page) => {
       BC_ALTS.forEach((alt) => {
-        if (page[alt] !== undefined && page[alt] !== null)
-          eligableAlts[alt].push(page);
+        if (page[alt] !== undefined && page[alt] !== null) eligableAlts[alt].push(page);
       });
 
       const basename = getDVBasename(page.file);
@@ -200,7 +199,7 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
         const values = parseFieldValue(page[field]);
 
         values.forEach((target) => {
-          if (target.startsWith("<%") || target.startsWith("{{")) return;
+          if (target.startsWith('<%') || target.startsWith('{{')) return;
           const targetOrder = getTargetOrder(frontms, target);
 
           populateMain(
@@ -210,7 +209,7 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
             field,
             target,
             sourceOrder,
-            targetOrder
+            targetOrder,
           );
         });
         if (CSVRows.length) addCSVCrumbs(mainG, CSVRows, dir, field);
@@ -220,25 +219,23 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
     db.end2G();
 
     // SECTION  Juggl Links
-    const jugglLinks =
-      app.plugins.plugins.juggl || parseJugglLinksWithoutJuggl
-        ? await getJugglLinks(plugin, files)
-        : [];
+    const jugglLinks = app.plugins.plugins.juggl || parseJugglLinksWithoutJuggl
+      ? await getJugglLinks(plugin, files)
+      : [];
 
-    if (jugglLinks.length)
-      addJugglLinksToGraph(settings, jugglLinks, frontms, mainG);
+    if (jugglLinks.length) addJugglLinksToGraph(settings, jugglLinks, frontms, mainG);
 
     // !SECTION  Juggl Links
 
-    db.start2G("Alternative Hierarchies");
+    db.start2G('Alternative Hierarchies');
     // SECTION  Hierarchy Notes
-    db.start2G("Hierarchy Notes");
+    db.start2G('Hierarchy Notes');
 
     if (hierarchyNotes.length) {
       for (const noteOrFolder of hierarchyNotes) {
-        if (noteOrFolder.endsWith("/")) {
+        if (noteOrFolder.endsWith('/')) {
           const folder = app.vault.getAbstractFileByPath(
-            normalizePath(noteOrFolder)
+            normalizePath(noteOrFolder),
           );
 
           if (!(folder instanceof TFolder)) continue;
@@ -247,18 +244,19 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
               addHNsToGraph(
                 settings,
                 await getHierarchyNoteItems(child),
-                mainG
+                mainG,
               );
             }
           }
         } else {
-          const file = app.metadataCache.getFirstLinkpathDest(noteOrFolder, "");
-          if (file)
+          const file = app.metadataCache.getFirstLinkpathDest(noteOrFolder, '');
+          if (file) {
             addHNsToGraph(
               settings,
               await getHierarchyNoteItems(file),
-              mainG
+              mainG,
             );
+          }
         }
       }
     }
@@ -266,41 +264,41 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
     db.end2G();
     // !SECTION  Hierarchy Notes
 
-    db.start2G("Folder Notes");
+    db.start2G('Folder Notes');
     addFolderNotesToGraph(plugin, eligableAlts[BC_FOLDER_NOTE], frontms, mainG);
     db.end2G();
-    db.start2G("Tag Notes");
+    db.start2G('Tag Notes');
     addTagNotesToGraph(plugin, eligableAlts[BC_TAG_NOTE], frontms, mainG);
     db.end2G();
-    db.start2G("Link Notes");
+    db.start2G('Link Notes');
     addLinkNotesToGraph(plugin, eligableAlts[BC_LINK_NOTE], frontms, mainG);
     db.end2G();
-    db.start2G("Regex Notes");
+    db.start2G('Regex Notes');
     addRegexNotesToGraph(plugin, eligableAlts[BC_REGEX_NOTE], frontms, mainG);
     db.end2G();
     // plugin.addNamingSystemNotesToGraph(frontms, mainG);
-    db.start2G("Traverse Notes");
+    db.start2G('Traverse Notes');
     addTraverseNotesToGraph(
       plugin,
       eligableAlts[BC_TRAVERSE_NOTE],
       mainG,
-      buildObsGraph()
+      buildObsGraph(),
     );
     db.end2G();
-    db.start2G("Dendron Notes");
+    db.start2G('Dendron Notes');
     addDendronNotesToGraph(plugin, frontms, mainG);
     db.end2G();
-    db.start2G("Dataview Notes");
+    db.start2G('Dataview Notes');
     addDataviewNotesToGraph(plugin, eligableAlts[BC_DV_NOTE], frontms, mainG);
     db.end2G();
-    db.start2G("Date Notes");
+    db.start2G('Date Notes');
     addDateNotesToGraph(plugin, frontms, mainG);
     db.end2G();
 
     db.end2G();
 
     files.forEach((file) => addNodesIfNot(mainG, [file.basename]));
-    db.end2G("graphs inited", { mainG });
+    db.end2G('graphs inited', { mainG });
     return mainG;
   } catch (err) {
     error(err);
@@ -321,7 +319,7 @@ export function buildClosedG(plugin: BCPlugin) {
       siblingsParentIsParent,
     },
   } = settings;
-  let closedG = getReflexiveClosure(mainG, userHiers);
+  const closedG = getReflexiveClosure(mainG, userHiers);
 
   if (sameParentIsSibling) addSiblingsFromSameParent(closedG, settings);
   if (siblingsParentIsParent) addSiblingsParentIsParent(closedG);
@@ -339,9 +337,8 @@ export async function refreshIndex(plugin: BCPlugin) {
   plugin.mainG = await buildMainG(plugin);
   plugin.closedG = buildClosedG(plugin);
 
-  for (const { type } of plugin.VIEWS)
-    await plugin.getActiveTYPEView(type)?.draw();
+  for (const { type } of plugin.VIEWS) await plugin.getActiveViewType(type)?.draw();
 
   if (plugin.settings.showBCs) await drawTrail(plugin);
-  if (plugin.settings.showRefreshNotice) new Notice("BC Index refreshed");
+  if (plugin.settings.showRefreshNotice) new Notice('BC Index refreshed');
 }

@@ -1,6 +1,6 @@
-import { Modal, TFile } from "obsidian";
-import ModifyHNItemComp from "../../Components/ModifyHNItemComp.svelte";
-import type BCPlugin from "../../main";
+import { Modal, TFile } from 'obsidian';
+import ModifyHNItemComp from '../../Components/ModifyHNItemComp.svelte';
+import type BCPlugin from '../../main';
 
 interface HNItem {
   depth: number;
@@ -10,17 +10,22 @@ interface HNItem {
 
 export class ModifyHierItemModal extends Modal {
   mount: ModifyHNItemComp;
+
   plugin: BCPlugin;
+
   modal: ModifyHierItemModal;
+
   hnItem: HNItem;
+
   file: TFile;
-  rel: "up" | "same" | "down";
+
+  rel: 'up' | 'same' | 'down';
 
   constructor(
     plugin: BCPlugin,
     hnItem: HNItem,
     file: TFile,
-    rel: "up" | "same" | "down"
+    rel: 'up' | 'same' | 'down',
   ) {
     super(app);
     this.plugin = plugin;

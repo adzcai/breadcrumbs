@@ -1,15 +1,15 @@
-import Graph, { MultiGraph } from "graphology";
-import { dfsFromNode } from "graphology-traversal";
-import type { Attributes } from "graphology-types";
-import { info } from "loglevel";
-import type { App } from "obsidian";
+import Graph, { MultiGraph } from 'graphology';
+import { dfsFromNode } from 'graphology-traversal';
+import type { Attributes } from 'graphology-types';
+import { info } from 'loglevel';
+import type { App } from 'obsidian';
 // import type BCPlugin from "../../main";
 import {
   BC_I_REFLEXIVE,
   BC_ORDER,
   blankRealNImplied,
   DIRECTIONS,
-} from "../constants";
+} from '../constants';
 import type {
   BCSettings,
   Directions,
@@ -18,17 +18,17 @@ import type {
   NodePath,
   RealNImplied,
   UserHier,
-} from "../interfaces";
-import { getFieldInfo, getOppDir, getOppFields } from "./HierUtils";
-import { getBaseFromMDPath } from "./ObsidianUtils";
-import type BCPlugin from "../main";
+} from '../interfaces';
+import { getFieldInfo, getOppDir, getOppFields } from './HierUtils';
+import { getBaseFromMDPath } from './ObsidianUtils';
+import type BCPlugin from '../main';
 
 // This function takes the real & implied graphs for a given relation, and returns a new graphs with both.
 // It makes implied relations real
 // TODO use reflexiveClosure instead
 export function closeImpliedLinks(
   real: MultiGraph,
-  implied: MultiGraph
+  implied: MultiGraph,
 ): MultiGraph {
   const closedG = real.copy();
   implied.forEachEdge((key, a, s, t) => {
@@ -55,7 +55,7 @@ export function getSubInDirs(g: MultiGraph, ...dirs: Directions[]) {
   const sub = new MultiGraph();
   g?.forEachEdge((k, a, s, t) => {
     if (dirs.includes(a.dir)) {
-      //@ts-ignore
+      // @ts-ignore
       addNodesIfNot(sub, [s, t], { order: a.order });
       sub.addEdge(s, t, a);
     }
@@ -74,7 +74,7 @@ export function getSubForFields(g: MultiGraph, fields: string[]) {
   const sub = new MultiGraph();
   g.forEachEdge((k, a, s, t) => {
     if (fields.includes(a.field)) {
-      //@ts-ignore
+      // @ts-ignore
       addNodesIfNot(sub, [s, t], { order: a.order });
       sub.addEdge(s, t, a);
     }
@@ -92,15 +92,14 @@ export function getSubForFields(g: MultiGraph, fields: string[]) {
  */
 export function getReflexiveClosure(
   g: MultiGraph,
-  userHiers: UserHier[]
+  userHiers: UserHier[],
 ): MultiGraph {
   const copy = g.copy();
   copy.forEachEdge((k, a, s, t) => {
     const { dir, field } = a;
     if (field === undefined) return;
     const oppDir = getOppDir(dir);
-    const oppField =
-      dir === "same" ? field : getOppFields(userHiers, field, dir)[0];
+    const oppField = dir === 'same' ? field : getOppFields(userHiers, field, dir)[0];
 
     addNodesIfNot(copy, [s, t], { order: 9999 });
     addEdgeIfNot(copy, t, s, {
@@ -112,17 +111,24 @@ export function getReflexiveClosure(
   return copy;
 }
 
+/**
+ * Adds nodes to the graph if they do not already exist.
+ * If a node already exists, its order attribute will be updated if it is less than 9999.
+ * @param g - The graph to add nodes to.
+ * @param nodes - An array of node names to add.
+ * @param attr - Optional attributes to assign to the nodes. Default is { order: 9999 }.
+ */
 export function addNodesIfNot(
   g: MultiGraph,
   nodes: string[],
-  attr = { order: 9999 }
+  attr = { order: 9999 },
 ) {
   for (const node of nodes) {
-    g.updateNode(node, (exstantAttrs: Attributes) => {
-      const extantOrder: number | undefined = exstantAttrs.order;
+    g.updateNode(node, (existingAttrs: Attributes) => {
+      const currentOrder: number | undefined = existingAttrs.order;
       return {
-        ...exstantAttrs,
-        order: extantOrder && extantOrder < 9999 ? extantOrder : attr.order,
+        ...existingAttrs,
+        order: currentOrder && currentOrder < 9999 ? currentOrder : attr.order,
       };
     });
   }
@@ -132,21 +138,31 @@ export function addEdgeIfNot(
   g: MultiGraph,
   source: string,
   target: string,
-  attr?: Attributes
+  attr?: Attributes,
 ) {
   if (!g.hasEdge(source, target)) g.addEdge(source, target, attr);
 }
 
-export const getSinks = (g: MultiGraph) =>
-  g.filterNodes((node) => g.hasNode(node) && !g.outDegree(node));
+/**
+ * Retrieves the sink nodes from a given graph.
+ * A sink node is a node that has no outgoing edges.
+ *
+ * @param g - The graph to retrieve the sink nodes from.
+ * @returns An array of sink nodes.
+ */
+export const getSinks = (g: MultiGraph) => g.filterNodes((node) => g.hasNode(node) && !g.outDegree(node));
 
-export const getSources = (g: MultiGraph) =>
-  g.filterNodes((node) => g.hasNode(node) && !g.inDegree(node));
+/**
+ * Retrieves the source nodes in a given graph.
+ * A source node is defined as a node that has no incoming edges.
+ *
+ * @param g - The graph to retrieve the source nodes from.
+ * @returns An array of source nodes.
+ */
+export const getSources = (g: MultiGraph) => g.filterNodes((node) => g.hasNode(node) && !g.inDegree(node));
 
-export const getOutNeighbours = (g: MultiGraph, node: string) =>
-  g.hasNode(node) ? g.outNeighbors(node) : [];
-export const getInNeighbours = (g: MultiGraph, node: string) =>
-  g.hasNode(node) ? g.inNeighbors(node) : [];
+export const getOutNeighbours = (g: MultiGraph, node: string) => (g.hasNode(node) ? g.outNeighbors(node) : []);
+export const getInNeighbours = (g: MultiGraph, node: string) => (g.hasNode(node) ? g.inNeighbors(node) : []);
 
 /**
  * Finds all paths from a starting node to all other sinks in a graph.
@@ -156,13 +172,13 @@ export const getInNeighbours = (g: MultiGraph, node: string) =>
  * @param {string} start - The starting node
  * @returns An array of arrays. Each array is a path.
  */
-export function dfsAllPaths(g: MultiGraph, start: string): string[][] {
+export function dfsAllPaths(g: MultiGraph, start: string, maxRecurse = 1000): string[][] {
   const queue: NodePath[] = [{ node: start, path: [] }];
   const visited: { [note: string]: number } = {};
   const allPaths: string[][] = [];
 
   let i = 0;
-  while (queue.length > 0 && i < 1000) {
+  while (queue.length > 0 && i < maxRecurse) {
     i++;
     const { node, path } = queue.shift();
 
@@ -170,7 +186,7 @@ export function dfsAllPaths(g: MultiGraph, start: string): string[][] {
     const succsNotVisited = g.hasNode(node)
       ? g.filterOutNeighbors(
         node,
-        (succ) => !visited[succ] || visited[succ] < 5
+        (succ) => (visited[succ] ?? 0) < 5,
       )
       : [];
     const newItems = succsNotVisited.map((succ) => {
@@ -221,8 +237,7 @@ export function removeCycles(g: Graph, startNode: string) {
   dfsFromNode(copy, startNode, (n) => {
     copy.forEachOutNeighbor(n, (t) => {
       if (t === prevNode && copy.hasEdge(t, prevNode)) {
-        try { copy.dropEdge(t, prevNode) }
-        catch (error) { console.error(t, prevNode, error) }
+        try { copy.dropEdge(t, prevNode); } catch (error) { console.error(t, prevNode, error); }
       }
     });
 
@@ -247,12 +262,12 @@ export function buildObsGraph(): MultiGraph {
   const { resolvedLinks, unresolvedLinks } = app.metadataCache;
 
   for (const source in resolvedLinks) {
-    if (!source.endsWith(".md")) continue;
+    if (!source.endsWith('.md')) continue;
     const sourceBase = getBaseFromMDPath(source);
     addNodesIfNot(ObsG, [sourceBase]);
 
     for (const dest in resolvedLinks[source]) {
-      if (!dest.endsWith(".md")) continue;
+      if (!dest.endsWith('.md')) continue;
       const destBase = getBaseFromMDPath(dest);
       addNodesIfNot(ObsG, [destBase]);
       ObsG.addEdge(sourceBase, destBase, { resolved: true });
@@ -283,7 +298,7 @@ export function populateMain(
   target: string,
   sourceOrder: number,
   targetOrder: number,
-  fillOpp = false
+  fillOpp = false,
 ): void {
   const { userHiers } = settings;
   const dir = getFieldInfo(userHiers, field).fieldDir;
@@ -308,21 +323,19 @@ export function populateMain(
   }
 }
 
-export const getTargetOrder = (frontms: dvFrontmatterCache[], target: string) =>
-  parseInt(
-    (frontms.find((ff) => ff?.file?.basename === target)?.[
-      BC_ORDER
-    ] as string) ?? "9999"
-  );
+export const getTargetOrder = (frontms: dvFrontmatterCache[], target: string) => parseInt(
+  (frontms.find((ff) => ff?.file?.basename === target)?.[
+    BC_ORDER
+  ] as string) ?? '9999',
+);
 
-export const getSourceOrder = (frontm: dvFrontmatterCache) =>
-  parseInt((frontm[BC_ORDER] as string) ?? "9999");
+export const getSourceOrder = (frontm: dvFrontmatterCache) => parseInt((frontm[BC_ORDER] as string) ?? '9999');
 
 /** Remember to filter by hierarchy in MatrixView! */
 export function getRealnImplied(
   plugin: BCPlugin,
   currNode: string,
-  dir: Directions = null
+  dir: Directions = null,
 ): RealNImplied {
   const realsnImplieds: RealNImplied = blankRealNImplied();
   const { settings, closedG } = plugin;
@@ -355,7 +368,7 @@ export function getRealnImplied(
             });
           }
         }
-      }
+      },
     );
   });
   return realsnImplieds;

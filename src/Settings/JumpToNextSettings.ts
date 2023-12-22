@@ -1,22 +1,22 @@
-import Checkboxes from "../Components/Checkboxes.svelte";
-import type BCPlugin from "../main";
-import { getFields } from "../Utils/HierUtils";
-import { subDetails } from "./BreadcrumbsSettingTab";
+import Checkboxes from '../Components/Checkboxes.svelte';
+import type BCPlugin from '../main';
+import { getFields } from '../Utils/HierUtils';
+import { subDetails } from './BreadcrumbsSettingTab';
 
 export function addJumpToNextSettings(
   plugin: BCPlugin,
-  viewDetails: HTMLDetailsElement
+  viewDetails: HTMLDetailsElement,
 ) {
   const { settings } = plugin;
-  const jumpToDirDetails = subDetails("Jump to Next Direction", viewDetails);
+  const jumpToDirDetails = subDetails('Jump to Next Direction', viewDetails);
 
-  jumpToDirDetails.createDiv({ cls: 'setting-item-name', text: 'Limit which fields to jump to' })
+  jumpToDirDetails.createDiv({ cls: 'setting-item-name', text: 'Limit which fields to jump to' });
 
   new Checkboxes({
     target: jumpToDirDetails,
     props: {
       plugin,
-      settingName: "limitJumpToFirstFields",
+      settingName: 'limitJumpToFirstFields',
       options: getFields(settings.userHiers),
     },
   });

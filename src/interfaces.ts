@@ -1,19 +1,21 @@
-import type { MultiGraph } from "graphology";
-import type { IJugglSettings, JugglLayouts } from "juggl-api";
-import type { LogLevel } from "loglevel";
-import type { DateTime } from "luxon";
-import type { Constructor, Pos, TFile } from "obsidian";
-import type BCPlugin from "./main";
+import type { MultiGraph } from 'graphology';
+import type { IJugglSettings, JugglLayouts } from 'juggl-api';
+import type { LogLevel } from 'loglevel';
+import type { DateTime } from 'luxon';
+import type {
+  Constructor, ItemView, Pos, TFile,
+} from 'obsidian';
+import type BCPlugin from './main';
 import type {
   CODEBLOCK_FIELDS,
   CODEBLOCK_TYPES,
   DIRECTIONS,
   RELATIONS,
   VISTYPES,
-} from "./constants";
-import type DucksView from "./Views/DucksView";
-import type MatrixView from "./Views/MatrixView";
-import type TreeView from "./Views/TreeView";
+} from './constants';
+import type DucksView from './Views/DucksView';
+import type MatrixView from './Views/MatrixView';
+import type TreeView from './Views/TreeView';
 
 export type DebugLevel = keyof LogLevel;
 export interface BCSettings {
@@ -147,7 +149,7 @@ export type UserHier = {
 export type CodeblockType = typeof CODEBLOCK_TYPES[number];
 export type CodeblockFields = typeof CODEBLOCK_FIELDS[number];
 
-export type MyView = MatrixView | DucksView | TreeView;
+export type MyView = (MatrixView | DucksView | TreeView) & ItemView;
 export type ViewInfo = {
   plain: string;
   type: string;
@@ -165,14 +167,14 @@ export interface dvLink {
 export interface JugglLink {
   file: TFile;
   links: {
-    dir: Directions | "";
+    dir: Directions | '';
     field: string;
     linksInLine: string[];
   }[];
 }
 
 export type RealNImplied = {
-  [dir: string]: { reals: SquareItem[]; implieds: SquareItem[] };
+  [dir in Directions]: { reals: SquareItem[]; implieds: SquareItem[] };
 };
 
 export interface HierarchyNoteItem {
@@ -181,18 +183,18 @@ export interface HierarchyNoteItem {
   note: string;
 }
 
-export interface internalLinkObj {
+export interface InternalLinkObj {
   to: string;
   cls: string;
   alt: string | null;
   order: number;
-  parent?: string;
-  implied: string;
+  parent: string | null;
+  implied: string | undefined;
 }
 
 export interface SquareProps {
-  realItems: internalLinkObj[];
-  impliedItems: internalLinkObj[];
+  realItems: InternalLinkObj[];
+  impliedItems: InternalLinkObj[];
   field: string;
 }
 
@@ -232,13 +234,13 @@ export type Relations = typeof RELATIONS[number];
 
 export type VisGraphs = {
   [relation in Relations]: {
-    [direction in "Real" | "Closed"]: {
-      [unlikedQ in "All" | "No Unlinked"]: MultiGraph;
+    [direction in 'Real' | 'Closed']: {
+      [unlikedQ in 'All' | 'No Unlinked']: MultiGraph;
     };
   };
 };
 
-export type VisType = typeof VISTYPES[number]
+export type VisType = typeof VISTYPES[number];
 
 export type HierData = {
   [dir in Directions]: {
@@ -269,7 +271,7 @@ export interface MetaeditApi {
   update: (key: string, value: string, file: TFile) => Promise<void>;
 }
 
-declare module "obsidian" {
+declare module 'obsidian' {
   interface App {
     plugins: {
       plugins: {
@@ -398,7 +400,7 @@ export interface BCAPII {
    * Returns all fields by default.
    * @param  {Directions} dir
    */
-  getFields(dir?: Directions | ""): string[];
+  getFields(dir?: Directions | ''): string[];
 
   /** Iterate over all user hierarchies, running `cb` on each new field */
   iterateHiers: (

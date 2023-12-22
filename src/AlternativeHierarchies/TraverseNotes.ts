@@ -1,17 +1,17 @@
-import type { MultiGraph } from "graphology";
-import { info } from "loglevel";
-import { BC_TRAVERSE_NOTE } from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
-import { dfsAllPaths, populateMain, removeCycles } from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { getDVBasename } from "../Utils/ObsidianUtils";
+import type { MultiGraph } from 'graphology';
+import { info } from 'loglevel';
+import { BC_TRAVERSE_NOTE } from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
+import { dfsAllPaths, populateMain, removeCycles } from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
 
 export function addTraverseNotesToGraph(
   plugin: BCPlugin,
   traverseNotes: dvFrontmatterCache[],
   mainG: MultiGraph,
-  obsG: MultiGraph
+  obsG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { userHiers } = settings;
@@ -22,8 +22,8 @@ export function addTraverseNotesToGraph(
     const basename = getDVBasename(file);
     const noCycles = removeCycles(obsG, basename);
 
-    let field = altFile[BC_TRAVERSE_NOTE] as string;
-    if (typeof field !== "string" || !fields.includes(field)) return;
+    const field = altFile[BC_TRAVERSE_NOTE] as string;
+    if (typeof field !== 'string' || !fields.includes(field)) return;
 
     const allPaths = dfsAllPaths(noCycles, basename);
     info(allPaths);
@@ -40,7 +40,7 @@ export function addTraverseNotesToGraph(
           next,
           9999,
           9999,
-          true
+          true,
         );
       });
     });

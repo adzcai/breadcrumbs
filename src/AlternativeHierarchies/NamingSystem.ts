@@ -1,19 +1,19 @@
-import type { MultiGraph } from "graphology";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
-import { strToRegex } from "../Utils/generalUtils";
+import type { MultiGraph } from 'graphology';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
+import { strToRegex } from '../Utils/generalUtils';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { getDVBasename } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
 
 export function addNamingSystemNotesToGraph(
   plugin: BCPlugin,
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const {
@@ -39,10 +39,10 @@ export function addNamingSystemNotesToGraph(
     const parts = source.split(split);
     const sliced = parts
       .slice(0, -1)
-      .map((p) => (p.endsWith("\\") ? p.slice(0, -1) : p));
+      .map((p) => (p.endsWith('\\') ? p.slice(0, -1) : p));
 
-    let joined = sliced.join("\\" + split);
-    joined = joined.startsWith("^") ? joined : "^" + joined;
+    let joined = sliced.join(`\\${split}`);
+    joined = joined.startsWith('^') ? joined : `^${joined}`;
     // joined =
     //   joined +
     //   (namingSystemEndsWithDelimiter ? "\\" + namingSystemSplit : "");
@@ -68,10 +68,9 @@ export function addNamingSystemNotesToGraph(
 
     const upFm = frontms.find((fm) => {
       const upBN = getDVBasename(fm.file);
-      const start =
-        upSystem + (namingSystemEndsWithDelimiter ? namingSystemSplit : "");
+      const start = upSystem + (namingSystemEndsWithDelimiter ? namingSystemSplit : '');
       return (
-        upBN !== sourceBN && (upBN === start || upBN.startsWith(start + " "))
+        upBN !== sourceBN && (upBN === start || upBN.startsWith(`${start} `))
       );
     });
 
@@ -90,7 +89,7 @@ export function addNamingSystemNotesToGraph(
       upBN,
       sourceOrder,
       targetOrder,
-      true
+      true,
     );
   });
 

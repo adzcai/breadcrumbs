@@ -1,14 +1,14 @@
-import type { MultiGraph } from "graphology";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
-import { populateMain } from "../Utils/graphUtils";
-import { getDVBasename } from "../Utils/ObsidianUtils";
-import * as luxon from "luxon";
+import type { MultiGraph } from 'graphology';
+import * as luxon from 'luxon';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
+import { populateMain } from '../Utils/graphUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
 
 export function addDateNotesToGraph(
   plugin: BCPlugin,
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const {
@@ -20,7 +20,7 @@ export function addDateNotesToGraph(
   } = settings;
   if (!addDateNotes) return;
 
-  const { regex } = luxon.DateTime.fromFormatExplain("", dateNoteFormat);
+  const { regex } = luxon.DateTime.fromFormatExplain('', dateNoteFormat);
   frontms.forEach((page) => {
     const { file } = page;
     const { day } = file;
@@ -38,7 +38,7 @@ export function addDateNotesToGraph(
       tomStr,
       9999,
       9999,
-      true
+      true,
     );
   });
 }

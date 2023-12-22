@@ -1,17 +1,17 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import type { TFile } from "obsidian";
-import type { AdjListItem, d3Link, d3Node } from "../interfaces";
-import { bfsAdjList, dfsFlatAdjList, VisModal } from "./VisModal";
-import { openOrSwitch } from "obsidian-community-lib";
-import { getCurrFile } from "../Utils/ObsidianUtils";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import type { TFile } from 'obsidian';
+import { openOrSwitch } from 'obsidian-community-lib';
+import type { AdjListItem, d3Link, d3Node } from '../interfaces';
+import { bfsAdjList, dfsFlatAdjList, VisModal } from './VisModal';
+import { getCurrFile } from '../Utils/ObsidianUtils';
 
 export const circlePacking = (
   graph: Graph,
   currFile: TFile,
   modal: VisModal,
   width: number,
-  height: number
+  height: number,
 ) => {
   const flatAdj = dfsFlatAdjList(graph, currFile.basename);
   console.log({ flatAdj });
@@ -48,79 +48,77 @@ export const circlePacking = (
 
   // console.log({ hierarchy });
 
-  const linkArr: d3Link[] = noDoubles.map((d) => {
-    return { source: d.name, target: d.parentId };
-  });
+  const linkArr: d3Link[] = noDoubles.map((d) => ({ source: d.name, target: d.parentId }));
   const links = linkArr.map((d) => Object.create(d));
 
   const svg = d3
-    .select(".d3-graph")
-    .append("svg")
-    .attr("height", height)
-    .attr("width", width);
+    .select('.d3-graph')
+    .append('svg')
+    .attr('height', height)
+    .attr('width', width);
 
   const nodeColour = getComputedStyle(document.body).getPropertyValue(
-    "--text-accent"
+    '--text-accent',
   );
 
   // Initialize the circle: all located at the center of the svg area
   const node = svg
-    .append("g")
-    .selectAll("circle")
+    .append('g')
+    .selectAll('circle')
     .data(noDoubles)
-    .join("circle")
-    .attr("r", (d) => Math.round(d.height / 10) + 10)
-    .attr("cx", width / 2)
-    .attr("cy", height / 2)
-    .style("fill", nodeColour)
-    .style("fill-opacity", 0.6)
-    .attr("stroke", nodeColour)
-    .style("stroke-width", 4);
+    .join('circle')
+    .attr('r', (d) => Math.round(d.height / 10) + 10)
+    .attr('cx', width / 2)
+    .attr('cy', height / 2)
+    .style('fill', nodeColour)
+    .style('fill-opacity', 0.6)
+    .attr('stroke', nodeColour)
+    .style('stroke-width', 4);
 
-  node.attr("aria-label", (d: AdjListItem) => d.name);
+  node.attr('aria-label', (d: AdjListItem) => d.name);
 
   const nodeClick = (event: MouseEvent, dest: string) => {
     const currFile = getCurrFile();
     openOrSwitch(dest, event);
     modal.close();
   };
-  node.on("click", (event: MouseEvent, d: d3Node) => {
+  node.on('click', (event: MouseEvent, d: d3Node) => {
     nodeClick(event, d.name);
   });
 
   const link = svg
-    .append("g")
-    .attr("stroke", "#868282")
-    .attr("stroke-opacity", 0.6)
-    .selectAll("line")
+    .append('g')
+    .attr('stroke', '#868282')
+    .attr('stroke-opacity', 0.6)
+    .selectAll('line')
     .data(links)
-    .join("line")
-    .attr("stroke-width", 0.8);
+    .join('line')
+    .attr('stroke-width', 0.8);
 
   // Features of the forces applied to the nodes:
   const simulation = d3
     .forceSimulation()
     .force(
-      "center",
+      'center',
       d3
         .forceCenter()
         .x(width / 2)
-        .y(height / 2)
+        .y(height / 2),
     ) // Attraction to the center of the svg area
-    .force("charge", d3.forceManyBody().strength(0.5)) // Nodes are attracted one each other of value is > 0
+    .force('charge', d3.forceManyBody().strength(0.5)) // Nodes are attracted one each other of value is > 0
     .force(
-      "collide",
-      d3.forceCollide().strength(0.025).radius(30).iterations(1)
+      'collide',
+      d3.forceCollide().strength(0.025).radius(30).iterations(1),
     ); // Force that avoids circle overlapping
 
   // Apply these forces to the nodes and update their positions.
   // Once the force algorithm is happy with positions ('alpha' value is low enough), simulations will stop.
-  simulation.nodes(noDoubles).on("tick", function (d) {
-    node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+  simulation.nodes(noDoubles).on('tick', (d) => {
+    node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
   });
 
   function zoomed({ transform }) {
-    node.attr("transform", transform);
+    node.attr('transform', transform);
   }
   svg.call(
     d3
@@ -130,11 +128,11 @@ export const circlePacking = (
         [width, height],
       ])
       .scaleExtent([0.5, 8])
-      .on("zoom", zoomed)
+      .on('zoom', zoomed),
   );
 
   const drag = (
-    simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>
+    simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
   ) => {
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -155,9 +153,9 @@ export const circlePacking = (
 
     return d3
       .drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended);
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended);
   };
 
   node.call(drag(simulation));

@@ -1,11 +1,11 @@
-import { Setting } from "obsidian";
-import type BCPlugin from "../main";
-import { subDetails } from "./BreadcrumbsSettingTab";
+import { Setting } from 'obsidian';
+import type BCPlugin from '../main';
+import { subDetails } from './BreadcrumbsSettingTab';
 
 export function addTreeViewSettings(
   plugin: BCPlugin,
-  viewDetails: HTMLDetailsElement
+  viewDetails: HTMLDetailsElement,
 ) {
   const { settings } = plugin;
-  const treeViewDetails = subDetails("Tree View", viewDetails);
+  const treeViewDetails = subDetails('Tree View', viewDetails);
 }

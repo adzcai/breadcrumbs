@@ -1,14 +1,14 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import type { TFile } from "obsidian";
-import { dfsFlatAdjList, VisModal } from "./VisModal";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import type { TFile } from 'obsidian';
+import { dfsFlatAdjList, VisModal } from './VisModal';
 
 export const edgeBundling = (
   graph: Graph,
   currFile: TFile,
   modal: VisModal,
   width: number,
-  height: number
+  height: number,
 ) => {
   const flatAdj = dfsFlatAdjList(graph, currFile.basename);
   console.log({ flatAdj });
@@ -21,37 +21,33 @@ export const edgeBundling = (
   const BUBBLE_SIZE_MIN = 4;
   const BUBBLE_SIZE_MAX = 20;
 
-  var diameter = 560,
-    radius = diameter / 2,
-    innerRadius = radius - 170; // between center and edge end
+  const diameter = 560;
+  const radius = diameter / 2;
+  const innerRadius = radius - 170; // between center and edge end
 
   // The 'cluster' function takes 1 argument as input. It also has methods (??) like cluster.separation(), cluster.size() and cluster.nodeSize()
-  var cluster = d3.cluster().size([360, innerRadius]);
+  const cluster = d3.cluster().size([360, innerRadius]);
 
-  var line = d3
+  const line = d3
     .lineRadial()
     .curve(d3.curveBundle.beta(0.85))
-    .radius(function (d) {
-      return d[1];
-    })
-    .angle(function (d) {
-      return (d[0] / 180) * Math.PI;
-    });
+    .radius((d) => d[1])
+    .angle((d) => (d[0] / 180) * Math.PI);
 
   const svg = d3
-    .select(".d3-graph")
-    .append("svg")
-    .attr("height", height)
-    .attr("width", width)
-    .append("g")
-    .attr("transform", "translate(" + radius + "," + radius + ")");
+    .select('.d3-graph')
+    .append('svg')
+    .attr('height', height)
+    .attr('width', width)
+    .append('g')
+    .attr('transform', `translate(${radius},${radius})`);
 
-  var link = svg.append("g").selectAll(".link"),
-    label = svg.append("g").selectAll(".label"),
-    bubble = svg.append("g").selectAll(".bubble");
+  const link = svg.append('g').selectAll('.link');
+  const label = svg.append('g').selectAll('.label');
+  const bubble = svg.append('g').selectAll('.bubble');
 
   // Add a scale for bubble size
-  var bubbleSizeScale = d3
+  const bubbleSizeScale = d3
     .scaleLinear()
     .domain([0, 100])
     .range([BUBBLE_SIZE_MIN, BUBBLE_SIZE_MAX]);
@@ -62,9 +58,9 @@ export const edgeBundling = (
   // console.log(hierarchicalData)
 
   // Reformat the data
-  var root = packageHierarchy(hier)
-    //debugger;
-    .sum(function (d) {
+  const root = packageHierarchy(hier)
+    // debugger;
+    .sum((d) => {
       console.log(d);
       return d.height;
     });
@@ -79,65 +75,57 @@ export const edgeBundling = (
   const _link = link
     .data(packageImports(leaves))
     .enter()
-    .append("path")
-    .each(function (d) {
+    .append('path')
+    .each((d) => {
       (d.source = d[0]), (d.target = d[d.length - 1]);
     })
-    .attr("class", "link")
-    .attr("d", line)
-    .attr("fill", "none")
-    .attr("stroke", "black");
+    .attr('class', 'link')
+    .attr('d', line)
+    .attr('fill', 'none')
+    .attr('stroke', 'black');
 
   const _label = label
     .data(leaves)
     .enter()
-    .append("text")
-    .attr("class", "label")
-    .attr("dy", "0.31em")
-    .attr("transform", function (d) {
-      return (
-        "rotate(" +
-        (d.x - 90) +
-        ")translate(" +
-        (d.y + PADDING_LABEL) +
-        ",0)" +
-        (d.x < 180 ? "" : "rotate(180)")
-      );
-    })
-    .attr("text-anchor", function (d) {
-      return d.x < 180 ? "start" : "end";
-    })
-    .text(function (d) {
-      return d.data.key;
-    });
+    .append('text')
+    .attr('class', 'label')
+    .attr('dy', '0.31em')
+    .attr('transform', (d) => (
+      `rotate(${
+        d.x - 90
+      })translate(${
+        d.y + PADDING_LABEL
+      },0)${
+        d.x < 180 ? '' : 'rotate(180)'}`
+    ))
+    .attr('text-anchor', (d) => (d.x < 180 ? 'start' : 'end'))
+    .text((d) => d.data.key);
 
   const _bubble = bubble
     .data(leaves)
     .enter()
-    .append("circle")
-    .attr("class", "bubble")
-    .attr("transform", function (d) {
-      return (
-        "rotate(" + (d.x - 90) + ")translate(" + (d.y + PADDING_BUBBLE) + ",0)"
-      );
-    })
-    .attr("r", (d) => bubbleSizeScale(d.value))
-    .attr("stroke", "black")
-    .attr("fill", "#69a3b2")
-    .style("opacity", 0.2);
+    .append('circle')
+    .attr('class', 'bubble')
+    .attr('transform', (d) => (
+      `rotate(${d.x - 90})translate(${d.y + PADDING_BUBBLE},0)`
+    ))
+    .attr('r', (d) => bubbleSizeScale(d.value))
+    .attr('stroke', 'black')
+    .attr('fill', '#69a3b2')
+    .style('opacity', 0.2);
 
   // Lazily construct the package hierarchy from class names.
   function packageHierarchy(classes) {
-    var map = {};
+    const map = {};
 
     function find(name, data) {
-      var node = map[name],
-        i;
+      let node = map[name];
+      let i;
       if (!node) {
-        node = map[name] = data || { name: name, children: [] };
+        node = map[name] = data || { name, children: [] };
         if (name.length) {
           // @ts-ignore
-          node.parent = find(name.substring(0, (i = name.lastIndexOf("."))));
+          node.parent = find(name.substring(0, (i = name.lastIndexOf('.'))));
           node.parent.children.push(node);
           node.key = name.substring(i + 1);
         }
@@ -145,29 +133,30 @@ export const edgeBundling = (
       return node;
     }
 
-    classes.forEach(function (d) {
+    classes.forEach((d) => {
       find(d.name, d);
     });
 
-    return d3.hierarchy(map[""]);
+    return d3.hierarchy(map['']);
   }
 
   // Return a list of imports for the given array of nodes.
   function packageImports(nodes) {
-    var map = {},
-      imports = [];
+    const map = {};
+    const imports = [];
 
     // Compute a map from name to node.
-    nodes.forEach(function (d) {
+    nodes.forEach((d) => {
       map[d.data.name] = d;
     });
 
     // For each import, construct a link from the source to target node.
-    nodes.forEach(function (d) {
-      if (d.data.imports)
-        d.data.imports.forEach(function (i) {
+    nodes.forEach((d) => {
+      if (d.data.imports) {
+        d.data.imports.forEach((i) => {
           imports.push(map[d.data.name].path(map[i]));
         });
+      }
     });
 
     return imports;

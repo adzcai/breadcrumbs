@@ -1,14 +1,14 @@
-import * as d3 from "d3";
-import type Graph from "graphology";
-import type { TFile } from "obsidian";
-import { dfsFlatAdjList, VisModal } from "./VisModal";
+import * as d3 from 'd3';
+import type Graph from 'graphology';
+import type { TFile } from 'obsidian';
+import { dfsFlatAdjList, VisModal } from './VisModal';
 
 export const radialTree = (
   graph: Graph,
   currFile: TFile,
   modal: VisModal,
   width: number,
-  height: number
+  height: number,
 ) => {
   const flatAdj = dfsFlatAdjList(graph, currFile.basename);
   console.log({ flatAdj });
@@ -17,10 +17,10 @@ export const radialTree = (
   console.log({ hierarchy });
 
   const svg = d3
-    .select(".d3-graph")
-    .append("svg")
-    .attr("height", height)
-    .attr("width", width);
+    .select('.d3-graph')
+    .append('svg')
+    .attr('height', height)
+    .attr('width', width);
 
   const root = d3
     .hierarchy(hierarchy, (d) => d.children)
@@ -50,13 +50,12 @@ export const radialTree = (
   }
 
   function setColor(d: d3.HierarchyNode<unknown>) {
-    var name = d.data.data.name;
-    d.color =
-      color.domain().indexOf(name) >= 0
-        ? color(name)
-        : d.parent
-          ? d.parent.color
-          : null;
+    const { name } = d.data.data;
+    d.color = color.domain().indexOf(name) >= 0
+      ? color(name)
+      : d.parent
+        ? d.parent.color
+        : null;
     if (d.children) d.children.forEach(setColor);
   }
 
@@ -80,52 +79,52 @@ export const radialTree = (
     startAngle: number,
     startRadius: number,
     endAngle: number,
-    endRadius: number
+    endRadius: number,
   ) {
     const c0 = Math.cos((startAngle = ((startAngle - 90) / 180) * Math.PI));
     const s0 = Math.sin(startAngle);
     const c1 = Math.cos((endAngle = ((endAngle - 90) / 180) * Math.PI));
     const s1 = Math.sin(endAngle);
     return (
-      "M" +
-      startRadius * c0 +
-      "," +
-      startRadius * s0 +
-      (endAngle === startAngle
-        ? ""
-        : "A" +
-        startRadius +
-        "," +
-        startRadius +
-        " 0 0 " +
-        (endAngle > startAngle ? 1 : 0) +
-        " " +
-        startRadius * c1 +
-        "," +
-        startRadius * s1) +
-      "L" +
-      endRadius * c1 +
-      "," +
-      endRadius * s1
+      `M${
+        startRadius * c0
+      },${
+        startRadius * s0
+      }${endAngle === startAngle
+        ? ''
+        : `A${
+          startRadius
+        },${
+          startRadius
+        } 0 0 ${
+          endAngle > startAngle ? 1 : 0
+        } ${
+          startRadius * c1
+        },${
+          startRadius * s1}`
+      }L${
+        endRadius * c1
+      },${
+        endRadius * s1}`
     );
   }
 
   const legend = (svg) => {
     const g = svg
-      .selectAll("g")
+      .selectAll('g')
       .data(color.domain())
-      .join("g")
+      .join('g')
       .attr(
-        "transform",
-        (d, i) => `translate(${-outerRadius},${-outerRadius + i * 20})`
+        'transform',
+        (d, i) => `translate(${-outerRadius},${-outerRadius + i * 20})`,
       );
 
-    g.append("rect").attr("width", 18).attr("height", 18).attr("fill", color);
+    g.append('rect').attr('width', 18).attr('height', 18).attr('fill', color);
 
-    g.append("text")
-      .attr("x", 24)
-      .attr("y", 9)
-      .attr("dy", "0.35em")
+    g.append('text')
+      .attr('x', 24)
+      .attr('y', 9)
+      .attr('dy', '0.35em')
       .text((d) => d);
   };
 
@@ -133,9 +132,9 @@ export const radialTree = (
   setRadius(root, (root.data.data.depth = 0), innerRadius / maxLength(root));
   setColor(root);
 
-  svg.append("g").call(legend);
+  svg.append('g').call(legend);
 
-  svg.append("style").text(`
+  svg.append('style').text(`
 
 .link--active {
 stroke: #000 !important;
@@ -153,47 +152,46 @@ font-weight: bold;
 `);
 
   const linkExtension = svg
-    .append("g")
-    .attr("fill", "none")
-    .attr("stroke", "#000")
-    .attr("stroke-opacity", 0.25)
-    .selectAll("path")
+    .append('g')
+    .attr('fill', 'none')
+    .attr('stroke', '#000')
+    .attr('stroke-opacity', 0.25)
+    .selectAll('path')
     .data(root.links().filter((d) => !d.target.children))
-    .join("path")
+    .join('path')
     .each(function (d) {
       d.target.linkExtensionNode = this;
     })
-    .attr("d", linkExtensionConstant);
+    .attr('d', linkExtensionConstant);
 
   const link = svg
-    .append("g")
-    .attr("fill", "none")
-    .attr("stroke", "#000")
-    .selectAll("path")
+    .append('g')
+    .attr('fill', 'none')
+    .attr('stroke', '#000')
+    .selectAll('path')
     .data(root.links())
-    .join("path")
+    .join('path')
     .each(function (d) {
       d.target.linkNode = this;
     })
-    .attr("d", linkConstant)
-    .attr("stroke", (d) => d.target.color);
+    .attr('d', linkConstant)
+    .attr('stroke', (d) => d.target.color);
 
   const label = svg
-    .append("g")
-    .selectAll("text")
+    .append('g')
+    .selectAll('text')
     .data(root.leaves())
-    .join("text")
-    .attr("dy", ".31em")
+    .join('text')
+    .attr('dy', '.31em')
     .attr(
-      "transform",
-      (d) =>
-        `rotate(${d.x - 90}) translate(${innerRadius + 4},0)${d.x < 180 ? "" : " rotate(180)"
-        }`
+      'transform',
+      (d) => `rotate(${d.x - 90}) translate(${innerRadius + 4},0)${d.x < 180 ? '' : ' rotate(180)'
+      }`,
     )
-    .attr("text-anchor", (d) => (d.x < 180 ? "start" : "end"))
+    .attr('text-anchor', (d) => (d.x < 180 ? 'start' : 'end'))
     .text((d) => d.data.data.name)
-    .on("mouseover", mouseovered(true))
-    .on("mouseout", mouseovered(false));
+    .on('mouseover', mouseovered(true))
+    .on('mouseout', mouseovered(false));
 
   //   function update(checked) {
   //     const t = d3.transition().duration(750);
@@ -205,19 +203,19 @@ font-weight: bold;
 
   function mouseovered(active) {
     return function (event, d) {
-      d3.select(this).classed("label--active", active);
+      d3.select(this).classed('label--active', active);
       d3.select(d.linkExtensionNode)
-        .classed("link-extension--active", active)
+        .classed('link-extension--active', active)
         .raise();
-      do d3.select(d.linkNode).classed("link--active", active).raise();
+      do d3.select(d.linkNode).classed('link--active', active).raise();
       while ((d = d.parent));
     };
   }
 
   function zoomed({ transform }) {
-    linkExtension.attr("transform", transform);
-    link.attr("transform", transform);
-    label.attr("transform", transform);
+    linkExtension.attr('transform', transform);
+    link.attr('transform', transform);
+    label.attr('transform', transform);
   }
   svg.call(
     d3
@@ -227,6 +225,6 @@ font-weight: bold;
         [width, height],
       ])
       .scaleExtent([0.5, 8])
-      .on("zoom", zoomed)
+      .on('zoom', zoomed),
   );
 };

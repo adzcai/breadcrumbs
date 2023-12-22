@@ -1,27 +1,30 @@
-import { debug, info, levels } from "loglevel";
-import type BCPlugin from "src/main";
+import { debug, info, levels } from 'loglevel';
+import type BCPlugin from 'src/main';
 
 export class Debugger {
   plugin: BCPlugin;
+
   constructor(plugin: BCPlugin) {
     this.plugin = plugin;
   }
 
-  debugLessThan = (level: number) =>
-    levels[this.plugin.settings.debugMode] < level;
+  debugLessThan = (level: number) => levels[this.plugin.settings.debugMode] < level;
 
   start2G(group: string) {
     if (this.debugLessThan(3)) console.groupCollapsed(group);
   }
+
   end2G(...msgs: any[]) {
     if (this.debugLessThan(3)) {
       if (msgs.length) info(...msgs);
       console.groupEnd();
     }
   }
+
   start1G(group: string) {
     if (this.debugLessThan(2)) console.groupCollapsed(group);
   }
+
   end1G(...msgs: any[]) {
     if (this.debugLessThan(2)) {
       if (msgs.length) debug(...msgs);

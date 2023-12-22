@@ -1,19 +1,21 @@
-import type { MultiGraph } from "graphology";
-import { getPlugin } from "juggl-api";
-import { addIcon, EventRef, MarkdownView, Plugin } from "obsidian";
+import type { MultiGraph } from 'graphology';
+import { getPlugin } from 'juggl-api';
+import {
+  addIcon, type EventRef, MarkdownView, Plugin,
+} from 'obsidian';
 import {
   addFeatherIcon,
   openView,
   wait,
-} from "obsidian-community-lib/dist/utils";
-import { BCAPI } from "./API";
-import { Debugger } from "src/Debugger";
-import { HierarchyNoteSelectorModal } from "./AlternativeHierarchies/HierarchyNotes/HierNoteModal";
-import { getCodeblockCB } from "./Codeblocks";
-import { copyGlobalIndex, copyLocalIndex } from "./Commands/CreateIndex";
-import { jumpToFirstDir } from "./Commands/jumpToFirstDir";
-import { thread } from "./Commands/threading";
-import { writeBCsToAllFiles, writeBCToFile } from "./Commands/WriteBCs";
+} from 'obsidian-community-lib/dist/utils';
+import { Debugger } from 'src/Debugger';
+import { BCAPI } from './API';
+import { HierarchyNoteSelectorModal } from './AlternativeHierarchies/HierarchyNotes/HierNoteModal';
+import { getCodeblockCB } from './Codeblocks';
+import { copyGlobalIndex, copyLocalIndex } from './Commands/CreateIndex';
+import { jumpToFirstDir } from './Commands/jumpToFirstDir';
+import { thread } from './Commands/threading';
+import { writeBCsToAllFiles, writeBCToFile } from './Commands/WriteBCs';
 import {
   DEFAULT_SETTINGS,
   DUCK_ICON,
@@ -24,68 +26,71 @@ import {
   TRAIL_ICON_SVG,
   TREE_VIEW,
   API_NAME,
-} from "./constants";
-import { FieldSuggestor } from "./FieldSuggestor";
+} from './constants';
+import { FieldSuggestor } from './FieldSuggestor';
 import type {
   BCAPII,
   BCSettings,
   Directions,
   MyView,
   ViewInfo,
-} from "./interfaces";
-import { buildClosedG, buildMainG, refreshIndex } from "./refreshIndex";
-import { RelationSuggestor } from "./RelationSuggestor";
-import { BCSettingTab } from "./Settings/BreadcrumbsSettingTab";
-import { getFields } from "./Utils/HierUtils";
-import { waitForCache } from "./Utils/ObsidianUtils";
-import DucksView from "./Views/DucksView";
-import MatrixView from "./Views/MatrixView";
-import { drawTrail } from "./Views/TrailView";
-import TreeView from "./Views/TreeView";
-import { BCStore } from "./Visualisations/Juggl";
-import { VisModal } from "./Visualisations/VisModal";
+} from './interfaces';
+import { buildClosedG, buildMainG, refreshIndex } from './refreshIndex';
+import { RelationSuggestor } from './RelationSuggestor';
+import { BCSettingTab } from './Settings/BreadcrumbsSettingTab';
+import { getFields } from './Utils/HierUtils';
+import { waitForCache } from './Utils/ObsidianUtils';
+import DucksView from './Views/DucksView';
+import MatrixView from './Views/MatrixView';
+import { drawTrail } from './Views/TrailView';
+import TreeView from './Views/TreeView';
+import { BCStore } from './Visualisations/Juggl';
+import { VisModal } from './Visualisations/VisModal';
 
 export default class BCPlugin extends Plugin {
-  settings: BCSettings;
+  settings!: BCSettings;
 
   visited: [string, HTMLDivElement][] = [];
 
-  mainG: MultiGraph;
-  closedG: MultiGraph;
+  mainG!: MultiGraph;
 
-  activeLeafChange: EventRef = undefined;
-  layoutChange: EventRef = undefined;
+  closedG!: MultiGraph;
 
-  db: Debugger;
+  activeLeafChange?: EventRef = undefined;
 
-  VIEWS: ViewInfo[];
+  layoutChange?: EventRef = undefined;
 
-  api: BCAPII;
-  private bcStore: BCStore;
+  db!: Debugger;
+
+  VIEWS!: ViewInfo[];
+
+  api!: BCAPII;
+
+  private bcStore!: BCStore;
 
   registerActiveLeafChangeEvent() {
     this.activeLeafChange = app.workspace.on(
-      "file-open",
+      'file-open',
       async () => {
         if (this.settings.refreshOnNoteChange) await refreshIndex(this);
         else {
-          const activeView = this.getActiveTYPEView(MATRIX_VIEW);
+          const activeView = this.getActiveViewType(MATRIX_VIEW);
           if (activeView) await activeView.draw();
         }
-      }
+      },
     );
     this.registerEvent(this.activeLeafChange);
   }
 
   registerLayoutChangeEvent() {
-    this.layoutChange = app.workspace.on("layout-change", async () => {
+    this.layoutChange = app.workspace.on('layout-change', async () => {
       if (this.settings.showBCs) await drawTrail(this);
     });
     this.registerEvent(this.layoutChange);
   }
 
   async onload(): Promise<void> {
-    console.log("loading breadcrumbs plugin");
+    console.log('loading breadcrumbs plugin');
 
     await this.loadSettings();
     this.addSettingTab(new BCSettingTab(this));
@@ -104,29 +109,27 @@ export default class BCPlugin extends Plugin {
     } = settings;
 
     if (fieldSuggestor) this.registerEditorSuggest(new FieldSuggestor(this));
-    if (enableRelationSuggestor)
-      this.registerEditorSuggest(new RelationSuggestor(this));
-
+    if (enableRelationSuggestor) this.registerEditorSuggest(new RelationSuggestor(this));
 
     // Override older versions of these settings
-    if (settings.limitTrailCheckboxes.length === 0) settings.limitTrailCheckboxes = getFields(settings.userHiers)
-    if (typeof settings.showAll === 'boolean') settings.showAll = settings.showAll ? 'All' : 'Shortest'
+    if (settings.limitTrailCheckboxes.length === 0) settings.limitTrailCheckboxes = getFields(settings.userHiers);
+    if (typeof settings.showAll === 'boolean') settings.showAll = settings.showAll ? 'All' : 'Shortest';
 
     this.VIEWS = [
       {
-        plain: "Matrix",
+        plain: 'Matrix',
         type: MATRIX_VIEW,
         constructor: MatrixView,
         openOnLoad: openMatrixOnLoad,
       },
       {
-        plain: "Duck",
+        plain: 'Duck',
         type: DUCK_VIEW,
         constructor: DucksView,
         openOnLoad: openDuckOnLoad,
       },
       {
-        plain: "Down",
+        plain: 'Down',
         type: TREE_VIEW,
         constructor: TreeView,
         openOnLoad: openDownOnLoad,
@@ -152,8 +155,7 @@ export default class BCPlugin extends Plugin {
         this.closedG = buildClosedG(this);
       }
 
-      for (const { openOnLoad, type, constructor } of this.VIEWS)
-        if (openOnLoad) await openView(type, constructor);
+      for (const { openOnLoad, type, constructor } of this.VIEWS) if (openOnLoad) await openView(type, constructor);
 
       if (showBCs) await drawTrail(this);
       this.registerActiveLeafChangeEvent();
@@ -161,16 +163,15 @@ export default class BCPlugin extends Plugin {
 
       // Source for save setting
       // https://github.com/hipstersmoothie/obsidian-plugin-prettier/blob/main/src/main.ts
-      const saveCommandDefinition =
-        app.commands.commands["editor:save-file"];
+      const saveCommandDefinition = app.commands.commands['editor:save-file'];
       const save = saveCommandDefinition?.callback;
 
-      if (typeof save === "function") {
+      if (typeof save === 'function') {
         saveCommandDefinition.callback = async () => {
           await save();
           if (this.settings.refreshOnNoteSave) {
             await refreshIndex(this);
-            const activeView = this.getActiveTYPEView(MATRIX_VIEW);
+            const activeView = this.getActiveViewType(MATRIX_VIEW);
             if (activeView) await activeView.draw();
           }
         };
@@ -178,8 +179,8 @@ export default class BCPlugin extends Plugin {
 
       app.workspace.iterateAllLeaves((leaf) => {
         if (leaf instanceof MarkdownView)
-          //@ts-ignore
-          leaf.view.previewMode.rerender(true);
+        // @ts-ignore
+        { leaf.view.previewMode.rerender(true); }
       });
     });
 
@@ -187,7 +188,7 @@ export default class BCPlugin extends Plugin {
       this.addCommand({
         id: `show-${type}-view`,
         name: `Open ${plain} View`,
-        //@ts-ignore
+        // @ts-ignore
         checkCallback: async (checking: boolean) => {
           if (checking) return app.workspace.getLeavesOfType(type).length === 0;
           await openView(type, constructor);
@@ -196,26 +197,26 @@ export default class BCPlugin extends Plugin {
     }
 
     this.addCommand({
-      id: "open-vis-modal",
-      name: "Open Visualisation Modal",
+      id: 'open-vis-modal',
+      name: 'Open Visualisation Modal',
       callback: () => new VisModal(this).open(),
     });
 
     this.addCommand({
-      id: "manipulate-hierarchy-notes",
-      name: "Adjust Hierarchy Notes",
+      id: 'manipulate-hierarchy-notes',
+      name: 'Adjust Hierarchy Notes',
       callback: () => new HierarchyNoteSelectorModal(this).open(),
     });
 
     this.addCommand({
-      id: "Refresh-Breadcrumbs-Index",
-      name: "Refresh Breadcrumbs Index",
-      callback: async () => await refreshIndex(this),
+      id: 'Refresh-Breadcrumbs-Index',
+      name: 'Refresh Breadcrumbs Index',
+      callback: async () => refreshIndex(this),
     });
 
     this.addCommand({
-      id: "Toggle-trail-in-Edit&LP",
-      name: "Toggle: Show Trail/Grid in Edit & LP mode",
+      id: 'Toggle-trail-in-Edit&LP',
+      name: 'Toggle: Show Trail/Grid in Edit & LP mode',
       callback: async () => {
         settings.showBCsInEditLPMode = !settings.showBCsInEditLPMode;
         await this.saveSettings();
@@ -224,34 +225,34 @@ export default class BCPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "Write-Breadcrumbs-to-Current-File",
-      name: "Write Breadcrumbs to Current File",
-      callback: async () => await writeBCToFile(this),
+      id: 'Write-Breadcrumbs-to-Current-File',
+      name: 'Write Breadcrumbs to Current File',
+      callback: async () => writeBCToFile(this),
     });
 
     this.addCommand({
-      id: "Write-Breadcrumbs-to-All-Files",
-      name: "Write Breadcrumbs to **ALL** Files",
-      callback: async () => await writeBCsToAllFiles(this),
+      id: 'Write-Breadcrumbs-to-All-Files',
+      name: 'Write Breadcrumbs to **ALL** Files',
+      callback: async () => writeBCsToAllFiles(this),
     });
 
     this.addCommand({
-      id: "local-index",
-      name: "Copy a Local Index to the clipboard",
-      callback: async () => await copyLocalIndex(this),
+      id: 'local-index',
+      name: 'Copy a Local Index to the clipboard',
+      callback: async () => copyLocalIndex(this),
     });
 
     this.addCommand({
-      id: "global-index",
-      name: "Copy a Global Index to the clipboard",
-      callback: async () => await copyGlobalIndex(this),
+      id: 'global-index',
+      name: 'Copy a Global Index to the clipboard',
+      callback: async () => copyGlobalIndex(this),
     });
 
-    ["up", "down", "next", "prev"].forEach((dir: Directions) => {
+    (<Directions[]>['up', 'down', 'next', 'prev']).forEach((dir: Directions) => {
       this.addCommand({
         id: `jump-to-first-${dir}`,
         name: `Jump to first '${dir}'`,
-        callback: async () => await jumpToFirstDir(this, dir),
+        callback: async () => jumpToFirstDir(this, dir),
       });
     });
 
@@ -259,19 +260,19 @@ export default class BCPlugin extends Plugin {
       this.addCommand({
         id: `new-file-with-curr-as-${field}`,
         name: `Create a new '${field}' from the current note`,
-        callback: async () => await thread(this, field),
+        callback: async () => thread(this, field),
       });
     });
 
     this.addRibbonIcon(
-      addFeatherIcon("tv") as string,
-      "Breadcrumbs Visualisation",
-      () => new VisModal(this).open()
+      addFeatherIcon('tv') as string,
+      'Breadcrumbs Visualisation',
+      () => new VisModal(this).open(),
     );
 
     this.registerMarkdownCodeBlockProcessor(
-      "breadcrumbs",
-      getCodeblockCB(this)
+      'breadcrumbs',
+      getCodeblockCB(this),
     );
 
     const jugglPlugin = getPlugin(app);
@@ -282,12 +283,14 @@ export default class BCPlugin extends Plugin {
 
     this.api = new BCAPI(this);
     // Register API to global window object.
-    (window[API_NAME] = this.api) &&
-      this.register(() => delete window[API_NAME]);
+    ((<any>window)[API_NAME] = this.api)
+      && this.register(() => delete (<any>window)[API_NAME]);
   }
 
-  getActiveTYPEView(type: string): MyView | null {
-    const { constructor } = this.VIEWS.find((view) => view.type === type);
+  getActiveViewType(type: string): MyView | null {
+    const view = this.VIEWS.find((view) => view.type === type);
+    if (!view) return null;
+    const { constructor } = view;
     const leaves = app.workspace.getLeavesOfType(type);
     if (leaves && leaves.length >= 1) {
       const { view } = leaves[0];
@@ -296,17 +299,15 @@ export default class BCPlugin extends Plugin {
     return null;
   }
 
-  loadSettings = async () =>
-  (this.settings = Object.assign(
-    {},
-    DEFAULT_SETTINGS,
-    await this.loadData()
-  ));
+  loadSettings = async () => (this.settings = {
+    ...DEFAULT_SETTINGS,
+    ...await this.loadData(),
+  });
 
-  saveSettings = async () => await this.saveData(this.settings);
+  saveSettings = async () => this.saveData(this.settings);
 
   onunload(): void {
-    console.log("unloading");
+    console.log('unloading');
     this.VIEWS.forEach(async (view) => {
       app.workspace.getLeavesOfType(view.type).forEach((leaf) => {
         leaf.detach();

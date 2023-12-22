@@ -1,22 +1,24 @@
-import type { MultiGraph } from "graphology";
-import { warn } from "loglevel";
-import { Notice } from "obsidian";
-import { BC_DV_NOTE, BC_DV_NOTE_FIELD, BC_IGNORE, DATAVIEW_MISSING } from "../constants";
-import type { dvFrontmatterCache } from "../interfaces";
-import type BCPlugin from "../main";
+import type { MultiGraph } from 'graphology';
+import { warn } from 'loglevel';
+import { Notice } from 'obsidian';
+import {
+  BC_DV_NOTE, BC_DV_NOTE_FIELD, BC_IGNORE, DATAVIEW_MISSING,
+} from '../constants';
+import type { dvFrontmatterCache } from '../interfaces';
+import type BCPlugin from '../main';
 import {
   getSourceOrder,
   getTargetOrder,
   populateMain,
-} from "../Utils/graphUtils";
-import { getFields } from "../Utils/HierUtils";
-import { getDVApi, getDVBasename } from "../Utils/ObsidianUtils";
+} from '../Utils/graphUtils';
+import { getFields } from '../Utils/HierUtils';
+import { getDVApi, getDVBasename } from '../Utils/ObsidianUtils';
 
 export function addDataviewNotesToGraph(
   plugin: BCPlugin,
   eligableAlts: dvFrontmatterCache[],
   frontms: dvFrontmatterCache[],
-  mainG: MultiGraph
+  mainG: MultiGraph,
 ) {
   const { settings } = plugin;
   const { userHiers, dataviewNoteField } = settings;
@@ -33,13 +35,11 @@ export function addDataviewNotesToGraph(
 
     let query = altFile[BC_DV_NOTE] as (string | Record<string, string>);
     if (query.hasOwnProperty('path')) {
-      //@ts-ignore
+      // @ts-ignore
       query = `[[${query.path}]]`;
     }
 
-
-    let field =
-      (altFile[BC_DV_NOTE_FIELD] as string) ?? (dataviewNoteField || fields[0]);
+    const field = (altFile[BC_DV_NOTE_FIELD] as string) ?? (dataviewNoteField || fields[0]);
 
     let targets: dvFrontmatterCache[] = [];
     try {
@@ -63,7 +63,7 @@ export function addDataviewNotesToGraph(
         targetBN,
         sourceOrder,
         targetOrder,
-        true
+        true,
       );
     }
   });
