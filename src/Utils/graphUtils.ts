@@ -2,8 +2,6 @@ import Graph, { MultiGraph } from 'graphology';
 import { dfsFromNode } from 'graphology-traversal';
 import type { Attributes } from 'graphology-types';
 import { info } from 'loglevel';
-import type { App } from 'obsidian';
-// import type BCPlugin from "../../main";
 import {
   BC_I_REFLEXIVE,
   BC_ORDER,
@@ -23,7 +21,40 @@ import { getFieldInfo, getOppDir, getOppFields } from './HierUtils';
 import { getBaseFromMDPath } from './ObsidianUtils';
 import type BCPlugin from '../main';
 
-// This function takes the real & implied graphs for a given relation, and returns a new graphs with both.
+/**
+ * Adds nodes to the graph if they do not already exist.
+ * If a node already exists, its order attribute will be updated if it is less than 9999.
+ * @param g - The graph to add nodes to.
+ * @param nodes - An array of node names to add.
+ * @param attr - Optional attributes to assign to the nodes. Default is { order: 9999 }.
+ */
+export function addNodesIfNot(
+  g: MultiGraph,
+  nodes: string[],
+  attr = { order: 9999 },
+) {
+  nodes.forEach((node) => {
+    g.updateNode(node, (existingAttrs: Attributes) => {
+      const currentOrder: number | undefined = existingAttrs.order;
+      return {
+        ...existingAttrs,
+        order: currentOrder && currentOrder < 9999 ? currentOrder : attr.order,
+      };
+    });
+  });
+}
+
+export function addEdgeIfNot(
+  g: MultiGraph,
+  source: string,
+  target: string,
+  attr?: Attributes,
+) {
+  if (!g.hasEdge(source, target)) g.addEdge(source, target, attr);
+}
+
+// This function takes the real & implied graphs for a given relation,
+// and returns a new graphs with both.
 // It makes implied relations real
 // TODO use reflexiveClosure instead
 export function closeImpliedLinks(
@@ -112,45 +143,15 @@ export function getReflexiveClosure(
 }
 
 /**
- * Adds nodes to the graph if they do not already exist.
- * If a node already exists, its order attribute will be updated if it is less than 9999.
- * @param g - The graph to add nodes to.
- * @param nodes - An array of node names to add.
- * @param attr - Optional attributes to assign to the nodes. Default is { order: 9999 }.
- */
-export function addNodesIfNot(
-  g: MultiGraph,
-  nodes: string[],
-  attr = { order: 9999 },
-) {
-  for (const node of nodes) {
-    g.updateNode(node, (existingAttrs: Attributes) => {
-      const currentOrder: number | undefined = existingAttrs.order;
-      return {
-        ...existingAttrs,
-        order: currentOrder && currentOrder < 9999 ? currentOrder : attr.order,
-      };
-    });
-  }
-}
-
-export function addEdgeIfNot(
-  g: MultiGraph,
-  source: string,
-  target: string,
-  attr?: Attributes,
-) {
-  if (!g.hasEdge(source, target)) g.addEdge(source, target, attr);
-}
-
-/**
  * Retrieves the sink nodes from a given graph.
  * A sink node is a node that has no outgoing edges.
  *
  * @param g - The graph to retrieve the sink nodes from.
  * @returns An array of sink nodes.
  */
-export const getSinks = (g: MultiGraph) => g.filterNodes((node) => g.hasNode(node) && !g.outDegree(node));
+export const getSinks = (g: MultiGraph) => g.filterNodes(
+  (node) => g.hasNode(node) && !g.outDegree(node),
+);
 
 /**
  * Retrieves the source nodes in a given graph.
@@ -159,10 +160,14 @@ export const getSinks = (g: MultiGraph) => g.filterNodes((node) => g.hasNode(nod
  * @param g - The graph to retrieve the source nodes from.
  * @returns An array of source nodes.
  */
-export const getSources = (g: MultiGraph) => g.filterNodes((node) => g.hasNode(node) && !g.inDegree(node));
+export const getSources = (g: MultiGraph) => g.filterNodes(
+  (node) => g.hasNode(node) && !g.inDegree(node),
+);
 
-export const getOutNeighbours = (g: MultiGraph, node: string) => (g.hasNode(node) ? g.outNeighbors(node) : []);
-export const getInNeighbours = (g: MultiGraph, node: string) => (g.hasNode(node) ? g.inNeighbors(node) : []);
+export const getOutNeighbours = (g: MultiGraph, node: string) => (
+  g.hasNode(node) ? g.outNeighbors(node) : []);
+export const getInNeighbours = (g: MultiGraph, node: string) => (
+  g.hasNode(node) ? g.inNeighbors(node) : []);
 
 /**
  * Finds all paths from a starting node to all other sinks in a graph.
@@ -179,8 +184,8 @@ export function dfsAllPaths(g: MultiGraph, start: string, maxRecurse = 1000): st
 
   let i = 0;
   while (queue.length > 0 && i < maxRecurse) {
-    i++;
-    const { node, path } = queue.shift();
+    i += 1;
+    const { node, path } = queue.shift()!;
 
     const extPath = [node, ...path];
     const succsNotVisited = g.hasNode(node)
@@ -207,16 +212,15 @@ export function bfsAllPaths(g: MultiGraph, start: string): string[][] {
 
   let i = 0;
   while (queue.length !== 0 && i < 1000) {
-    i++;
-    const { node, path } = queue.shift();
+    i += 1;
+    const { node, path } = queue.shift()!;
     const extPath = [node, ...path];
 
     const succs = g.hasNode(node)
       ? g.filterOutNeighbors(node, (n) => !path.includes(n))
       : [];
-    for (const node of succs) {
-      queue.push({ node, path: extPath });
-    }
+
+    queue.push(...succs.map((n) => ({ node: n, path: extPath })));
 
     // terminal node
     if (!g.hasNode(node) || succs.length === 0) {
@@ -233,11 +237,15 @@ export function bfsAllPaths(g: MultiGraph, start: string): string[][] {
 
 export function removeCycles(g: Graph, startNode: string) {
   const copy = g.copy();
-  let prevNode = null;
+  let prevNode: string | null = null;
   dfsFromNode(copy, startNode, (n) => {
     copy.forEachOutNeighbor(n, (t) => {
       if (t === prevNode && copy.hasEdge(t, prevNode)) {
-        try { copy.dropEdge(t, prevNode); } catch (error) { console.error(t, prevNode, error); }
+        try {
+          copy.dropEdge(t, prevNode);
+        } catch (error) {
+          console.error(t, prevNode, error);
+        }
       }
     });
 
@@ -261,30 +269,30 @@ export function buildObsGraph(): MultiGraph {
   const ObsG = new MultiGraph();
   const { resolvedLinks, unresolvedLinks } = app.metadataCache;
 
-  for (const source in resolvedLinks) {
-    if (!source.endsWith('.md')) continue;
+  Object.keys(resolvedLinks).forEach((source) => {
+    if (!source.endsWith('.md')) return;
     const sourceBase = getBaseFromMDPath(source);
     addNodesIfNot(ObsG, [sourceBase]);
 
-    for (const dest in resolvedLinks[source]) {
-      if (!dest.endsWith('.md')) continue;
+    Object.keys(resolvedLinks[source]).forEach((dest) => {
+      if (!dest.endsWith('.md')) return;
       const destBase = getBaseFromMDPath(dest);
       addNodesIfNot(ObsG, [destBase]);
       ObsG.addEdge(sourceBase, destBase, { resolved: true });
-    }
-  }
+    });
+  });
 
-  for (const source in unresolvedLinks) {
+  Object.keys(unresolvedLinks).forEach((source) => {
     const sourceBase = getBaseFromMDPath(source);
     addNodesIfNot(ObsG, [sourceBase]);
 
-    for (const dest in unresolvedLinks[source]) {
+    Object.keys(unresolvedLinks[source]).forEach((dest) => {
       const destBase = getBaseFromMDPath(dest);
       addNodesIfNot(ObsG, [destBase]);
-      if (sourceBase === destBase) continue;
+      if (sourceBase === destBase) return;
       ObsG.addEdge(sourceBase, destBase, { resolved: false });
-    }
-  }
+    });
+  });
 
   info({ ObsG });
   return ObsG;
@@ -323,19 +331,20 @@ export function populateMain(
   }
 }
 
-export const getTargetOrder = (frontms: dvFrontmatterCache[], target: string) => parseInt(
+export const getTargetOrder = (frontms: dvFrontmatterCache[], target: string) => Number.parseInt(
   (frontms.find((ff) => ff?.file?.basename === target)?.[
     BC_ORDER
   ] as string) ?? '9999',
+  10,
 );
 
-export const getSourceOrder = (frontm: dvFrontmatterCache) => parseInt((frontm[BC_ORDER] as string) ?? '9999');
+export const getSourceOrder = (frontm: dvFrontmatterCache) => Number.parseInt((frontm[BC_ORDER] as string) ?? '9999', 10);
 
 /** Remember to filter by hierarchy in MatrixView! */
 export function getRealnImplied(
   plugin: BCPlugin,
   currNode: string,
-  dir: Directions = null,
+  dir?: Directions,
 ): RealNImplied {
   const realsnImplieds: RealNImplied = blankRealNImplied();
   const { settings, closedG } = plugin;

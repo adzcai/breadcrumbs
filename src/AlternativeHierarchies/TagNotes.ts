@@ -19,7 +19,7 @@ import { getFields } from '../Utils/HierUtils';
 import { addHash, dropHash, getDVBasename } from '../Utils/ObsidianUtils';
 
 const getAllTags = (file: TFile, withHash = true): string[] => {
-  const { tags, frontmatter } = app.metadataCache.getFileCache(file);
+  const { tags, frontmatter } = app.metadataCache.getFileCache(file)!;
   const allTags: string[] = [];
 
   tags?.forEach((t) => allTags.push(dropHash(t.tag)));
@@ -37,7 +37,7 @@ const getAllTags = (file: TFile, withHash = true): string[] => {
 export function addTagNotesToGraph(
   plugin: BCPlugin,
   eligableAlts: dvFrontmatterCache[],
-  frontms: dvFrontmatterCache[],
+  frontmatterCache: dvFrontmatterCache[],
   mainG: MultiGraph,
 ) {
   const { settings } = plugin;
@@ -57,9 +57,11 @@ export function addTagNotesToGraph(
         : allTags.some((t) => t.includes(tag));
     };
 
-    const targets = frontms
+    const targets = frontmatterCache
       .map((ff) => ff.file)
-      .filter((file) => file.path !== tagNoteFile.path && hasThisTag(file) && !file[BC_IGNORE])
+      .filter(
+        (file) => file.path !== tagNoteFile.path && hasThisTag(file) && !(file as any)[BC_IGNORE],
+      )
       .map(getDVBasename);
     info({ targets });
 
@@ -67,7 +69,7 @@ export function addTagNotesToGraph(
 
     targets.forEach((target) => {
       const sourceOrder = getSourceOrder(altFile);
-      const targetOrder = getTargetOrder(frontms, tagNoteBasename);
+      const targetOrder = getTargetOrder(frontmatterCache, tagNoteBasename);
       populateMain(
         settings,
         mainG,

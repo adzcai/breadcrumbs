@@ -7,7 +7,7 @@ import type BCPlugin from '../main';
 export default class TreeView extends ItemView {
   private plugin: BCPlugin;
 
-  private view: SideTree;
+  private view!: SideTree;
 
   constructor(leaf: WorkspaceLeaf, plugin: BCPlugin) {
     super(leaf);
@@ -31,7 +31,10 @@ export default class TreeView extends ItemView {
 
   icon = addFeatherIcon('corner-right-down') as string;
 
-  async onOpen(): Promise<void> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async onOpen(): Promise<void> {
+
+  }
 
   onClose(): Promise<void> {
     this.view?.$destroy();

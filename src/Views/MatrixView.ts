@@ -1,6 +1,8 @@
-import { error, info } from 'loglevel';
+/* eslint-disable prefer-const */
+import { info } from 'loglevel';
 import { ItemView, TFile, WorkspaceLeaf } from 'obsidian';
 import { Debugger } from 'src/Debugger';
+import { getAPI } from 'obsidian-dataview';
 import Matrix from '../Components/Matrix.svelte';
 import {
   ARROW_DIRECTIONS,
@@ -19,7 +21,7 @@ import type {
 import type BCPlugin from '../main';
 import { splitAndTrim } from '../Utils/generalUtils';
 import { getOppDir, getOppFields } from '../Utils/HierUtils';
-import { getDVApi, getCurrFile, linkClass } from '../Utils/ObsidianUtils';
+import { getCurrFile, getFrontmatter, linkClass } from '../Utils/ObsidianUtils';
 
 export function getMatrixNeighbours(plugin: BCPlugin, currNode: string) {
   const { closedG, settings } = plugin;
@@ -47,30 +49,14 @@ export function getMatrixNeighbours(plugin: BCPlugin, currNode: string) {
 export default class MatrixView extends ItemView {
   plugin: BCPlugin;
 
-  private view: Matrix;
+  private view!: Matrix;
 
-  db: Debugger;
+  debug: Debugger;
 
   constructor(leaf: WorkspaceLeaf, plugin: BCPlugin) {
     super(leaf);
     this.plugin = plugin;
-    this.db = new Debugger(plugin);
-  }
-
-  async onload(): Promise<void> {
-    super.onload();
-    const { plugin } = this;
-
-    app.workspace.onLayoutReady(() => {
-      setTimeout(
-        async () => this.draw(),
-        app.plugins.plugins.dataview
-          ? app.plugins.plugins.dataview.api
-            ? 1
-            : plugin.settings.dvWaitTime
-          : 3000,
-      );
-    });
+    this.debug = new Debugger(plugin);
   }
 
   getViewType() {
@@ -83,7 +69,36 @@ export default class MatrixView extends ItemView {
 
   icon = TRAIL_ICON;
 
-  async onOpen(): Promise<void> { }
+  async onOpen() {
+    await this.draw();
+  }
+
+  async draw() {
+    const { contentEl, debug, plugin } = this;
+    debug.start2G('Draw Matrix View');
+
+    contentEl.empty();
+    const { userHiers } = plugin.settings;
+
+    const currFile = getCurrFile();
+    if (!currFile) {
+      this.contentEl.appendText('Open a file to view its breadcrumbs.');
+      return;
+    }
+
+    const hierSquares = this.getHierSquares(userHiers, currFile).filter(
+      (squareArr) => squareArr.some(
+        (sq) => sq.realItems.length + sq.impliedItems.length > 0,
+      ),
+    );
+
+    new Matrix({
+      target: contentEl,
+      props: { hierSquares, matrixView: this, currFile },
+    });
+
+    this.debug.end2G();
+  }
 
   onClose(): Promise<void> {
     this.view?.$destroy();
@@ -95,11 +110,11 @@ export default class MatrixView extends ItemView {
     const { altLinkFields, showAllAliases } = plugin.settings;
     if (!altLinkFields.length) return null;
 
-    // dv First
-    const dv = getDVApi(plugin);
+    const dv = getAPI();
     if (dv) {
       const page = dv.page(node);
       if (!page) return null;
+      // eslint-disable-next-line no-restricted-syntax
       for (const alt of altLinkFields) {
         const value = page[alt] as string;
 
@@ -109,9 +124,9 @@ export default class MatrixView extends ItemView {
     } else {
       const file = app.metadataCache.getFirstLinkpathDest(node, '');
       if (!file) return null;
-      const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter;
+      const frontmatter = getFrontmatter(file);
       if (!frontmatter) return null;
-      const field = altLinkFields.find((field) => frontmatter[field]);
+      const field = altLinkFields.find((f) => frontmatter[f]);
       if (!field) return null;
       const value = frontmatter[field];
       const arr: string[] = typeof value === 'string' ? splitAndTrim(value) : value;
@@ -123,6 +138,7 @@ export default class MatrixView extends ItemView {
 
   toInternalLinkObj = (
     to: string,
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     realQ = true,
     parent: string | null,
     implied?: string,
@@ -145,7 +161,10 @@ export default class MatrixView extends ItemView {
     return implieds.filter((implied) => !realTos.includes(implied.to));
   }
 
-  getOrder = (node: string) => Number.parseInt(this.plugin.mainG.getNodeAttribute(node, 'order'));
+  getOrder = (node: string) => Number.parseInt(
+    this.plugin.mainG.getNodeAttribute(node, 'order'),
+    10,
+  );
 
   sortItemsAlpha = (a: InternalLinkObj, b: InternalLinkObj) => {
     const { sortByNameShowAlias, alphaSortAsc } = this.plugin.settings;
@@ -185,7 +204,7 @@ export default class MatrixView extends ItemView {
         || (item.field.includes(`<${arrow}>`)
           && hier[oppDir].includes(item.field.split(' <')[0]));
 
-      for (const direction in realsnImplieds) {
+      Object.keys(realsnImplieds).forEach((direction) => {
         const dir = direction as Directions;
         const oppDir = getOppDir(dir);
         const arrow = ARROW_DIRECTIONS[dir];
@@ -198,7 +217,7 @@ export default class MatrixView extends ItemView {
         filteredRealNImplied[dir].implieds = implieds
           .filter((implied) => resultsFilter(implied, dir as Directions, oppDir, arrow))
           .map((item) => this.toInternalLinkObj(item.to, false, null, item.implied));
-      }
+      });
 
       let {
         up: { reals: ru, implieds: iu },
@@ -281,34 +300,5 @@ export default class MatrixView extends ItemView {
 
       return squareDirectionsOrder.map((order) => square[order]);
     });
-  }
-
-  async draw(): Promise<void> {
-    try {
-      const { contentEl, db, plugin } = this;
-      db.start2G('Draw Matrix View');
-      contentEl.empty();
-
-      const { userHiers } = plugin.settings;
-
-      const currFile = getCurrFile();
-      if (!currFile) return;
-
-      const hierSquares = this.getHierSquares(userHiers, currFile).filter(
-        (squareArr) => squareArr.some(
-          (sq) => sq.realItems.length + sq.impliedItems.length > 0,
-        ),
-      );
-
-      new Matrix({
-        target: contentEl,
-        props: { hierSquares, matrixView: this, currFile },
-      });
-
-      db.end2G();
-    } catch (err) {
-      error(err);
-      this.db.end2G();
-    }
   }
 }

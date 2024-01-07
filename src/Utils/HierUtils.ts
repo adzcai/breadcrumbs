@@ -36,6 +36,8 @@ export const getOppDir = (dir: Directions): Directions => {
       return 'prev';
     case 'prev':
       return 'next';
+    default:
+      throw new Error('Invalid direction');
   }
 };
 
@@ -43,8 +45,8 @@ export const getOppDir = (dir: Directions): Directions => {
  *  Get the hierarchy and direction that `field` is in
  * */
 export function getFieldInfo(userHiers: UserHier[], field: string) {
-  let fieldDir: Directions;
-  let fieldHier: UserHier;
+  let fieldDir: Directions | null = null;
+  let fieldHier: UserHier | null = null;
 
   DIRECTIONS.forEach((dir: Directions) => {
     userHiers.forEach((hier) => {
@@ -54,15 +56,23 @@ export function getFieldInfo(userHiers: UserHier[], field: string) {
       }
     });
   });
-  return { fieldHier, fieldDir };
+
+  return {
+    fieldHier: fieldHier as unknown as UserHier,
+    fieldDir: fieldDir as unknown as Directions,
+  };
 }
+
+export const fallbackField = (field: string, dir: Directions) => `${field} <${ARROW_DIRECTIONS[dir]}>`;
+export const fallbackOppField = (field: string, dir: Directions) => `${field} <${ARROW_DIRECTIONS[getOppDir(dir)]}>`;
 
 export function getOppFields(
   userHiers: UserHier[],
   field: string,
   dir: Directions,
 ) {
-  // If the field ends with `>`, it is already the opposite field we need (coming from `getOppFallback`)
+  // If the field ends with `>`, it is already the opposite field we need
+  // (coming from `getOppFallback`)
   if (field.endsWith('>')) return [field.slice(0, -4)];
 
   const oppFields = [fallbackOppField(field, dir)];
@@ -77,9 +87,6 @@ export function getOppFields(
 export const hierToStr = (hier: UserHier) => DIRECTIONS.map(
   (dir) => `${ARROW_DIRECTIONS[dir]}: ${hier[dir].join(', ')}`,
 ).join('\n');
-
-export const fallbackField = (field: string, dir: Directions) => `${field} <${ARROW_DIRECTIONS[dir]}>`;
-export const fallbackOppField = (field: string, dir: Directions) => `${field} <${ARROW_DIRECTIONS[getOppDir(dir)]}>`;
 
 export function iterateHiers(
   userHiers: UserHier[],

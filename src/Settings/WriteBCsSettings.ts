@@ -2,7 +2,7 @@ import { Setting } from 'obsidian';
 import Checkboxes from '../Components/Checkboxes.svelte';
 import type BCPlugin from '../main';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addWriteBCsSettings(
   plugin: BCPlugin,

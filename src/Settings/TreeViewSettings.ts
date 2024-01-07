@@ -1,6 +1,6 @@
 import { Setting } from 'obsidian';
 import type BCPlugin from '../main';
-import { subDetails } from './BreadcrumbsSettingTab';
+import { subDetails } from './details';
 
 export function addTreeViewSettings(
   plugin: BCPlugin,

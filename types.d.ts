@@ -7,9 +7,6 @@ declare namespace obsidian {
       enabledPlugins: Set<string>;
       plugins: {
         [id: string]: any;
-        dataview?: {
-          api?: DataviewApi;
-        };
         juggl: any;
       };
     };

@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash';
 import { info } from 'loglevel';
 import { copy } from 'obsidian-community-lib/dist/utils';
 import type BCPlugin from '../main';
@@ -15,9 +14,11 @@ export function addAliasesToIndex(plugin: BCPlugin, index: string) {
   const lines = index.slice().split('\n');
 
   if (aliasesInIndex) {
+    // eslint-disable-next-line no-restricted-syntax
     for (let line of lines) {
-      const [indent, ...content] = line.split('- ');
+      const [, ...content] = line.split('- ');
       const note = content.join('- ');
+      // eslint-disable-next-line no-continue
       if (!note) continue;
 
       const currFile = app.metadataCache.getFirstLinkpathDest(note, '');
@@ -50,8 +51,8 @@ export function createIndex(
   indent = '  ',
 ): string {
   let index = '';
-  const copy = cloneDeep(allPaths);
-  const reversed = copy.map((path) => path.reverse());
+  const copycopy = allPaths.map((ary) => [...ary]);
+  const reversed = copycopy.map((path) => path.reverse());
   reversed.forEach((path) => path.shift());
 
   const realIndent = indent === '\\t' ? '\t' : indent;
@@ -61,19 +62,20 @@ export function createIndex(
   } = {};
 
   reversed.forEach((path) => {
-    for (let depth = 0; depth < path.length; depth++) {
+    for (let depth = 0; depth < path.length; depth += 1) {
       const currNode = path[depth];
 
       // If that node has been visited before at the current depth
       if (
-        visited.hasOwnProperty(currNode)
+        Object.prototype.hasOwnProperty.call(visited, currNode)
         && visited[currNode].includes(depth)
+      // eslint-disable-next-line no-continue
       ) continue;
       else {
         index += `${realIndent.repeat(depth)}- ${asWikilinks ? makeWiki(currNode) : currNode
         }\n`;
 
-        if (!visited.hasOwnProperty(currNode)) visited[currNode] = [];
+        if (!Object.prototype.hasOwnProperty.call(visited, currNode)) visited[currNode] = [];
         visited[currNode].push(depth);
       }
     }
@@ -84,7 +86,7 @@ export function createIndex(
 export async function copyLocalIndex(plugin: BCPlugin) {
   const { settings, closedG } = plugin;
   const { wikilinkIndex, createIndexIndent } = settings;
-  const { basename } = getCurrFile();
+  const { basename } = getCurrFile()!;
 
   const onlyDowns = getSubInDirs(closedG, 'down');
   const allPaths = dfsAllPaths(onlyDowns, basename);

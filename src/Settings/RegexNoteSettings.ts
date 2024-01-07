@@ -2,7 +2,7 @@ import { DropdownComponent, Setting } from 'obsidian';
 import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addRegexNoteSettings(
   plugin: BCPlugin,
@@ -22,9 +22,11 @@ export function addRegexNoteSettings(
       ),
     )
     .addDropdown((dd: DropdownComponent) => {
-      const options = {};
+      const options: Record<string, string> = {};
       getFields(settings.userHiers).forEach(
-        (field) => (options[field] = field),
+        (field) => {
+          options[field] = field;
+        },
       );
       dd.addOptions(Object.assign(options, { '': '' }))
         .setValue(settings.regexNoteField)

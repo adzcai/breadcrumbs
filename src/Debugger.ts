@@ -11,7 +11,7 @@ export class Debugger {
   debugLessThan = (level: number) => levels[this.plugin.settings.debugMode] < level;
 
   start2G(group: string) {
-    if (this.debugLessThan(3)) console.groupCollapsed(group);
+    if (this.debugLessThan(3)) console.group(group);
   }
 
   end2G(...msgs: any[]) {
@@ -22,7 +22,7 @@ export class Debugger {
   }
 
   start1G(group: string) {
-    if (this.debugLessThan(2)) console.groupCollapsed(group);
+    if (this.debugLessThan(2)) console.group(group);
   }
 
   end1G(...msgs: any[]) {

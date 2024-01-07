@@ -2,7 +2,9 @@ import { normalizePath, Notice, TFile } from 'obsidian';
 import type { Directions } from '../interfaces';
 import type BCPlugin from '../main';
 import { getFieldInfo, getOppFields } from '../Utils/HierUtils';
-import { createOrUpdateYaml, getCurrFile, splitAtYaml } from '../Utils/ObsidianUtils';
+import {
+  createOrUpdateYaml, getCurrFile, getFrontmatter, splitAtYaml,
+} from '../Utils/ObsidianUtils';
 
 const resolveThreadingNameTemplate = (
   template: string,
@@ -25,7 +27,7 @@ function makeFilenameUnique(filename: string) {
   while (app.metadataCache.getFirstLinkpathDest(newName, '')) {
     if (i === 1) newName += ` ${i}`;
     else newName = `${newName.slice(0, -2)} ${i}`;
-    i++;
+    i += 1;
   }
   return newName;
 }
@@ -44,6 +46,8 @@ async function resolveThreadingContentTemplate(
       templatePath,
       '',
     );
+
+    if (!templateFile) return null;
 
     const template = await app.vault.cachedRead(templateFile);
     newContent = template.replace(
@@ -98,6 +102,8 @@ export async function thread(plugin: BCPlugin, field: string) {
     oppCrumb,
   );
 
+  if (!newContent) return;
+
   const newFile = await app.vault.create(
     normalizePath(`${newFileParent.path}/${newBasename}.md`),
     newContent,
@@ -115,12 +121,14 @@ export async function thread(plugin: BCPlugin, field: string) {
       field,
       newFile.basename,
       currFile,
-      app.metadataCache.getFileCache(currFile).frontmatter,
+      getFrontmatter(currFile),
       api,
     );
   } else {
     const crumb = `${field}:: [[${newFile.basename}]]`;
-    const { editor } = app.workspace.activeLeaf.view;
+    const leaf = app.workspace.activeLeaf;
+    if (!leaf) return;
+    const { editor } = leaf.view;
     if (threadUnderCursor || !editor) {
       editor.replaceRange(crumb, editor.getCursor());
     } else {
@@ -141,7 +149,7 @@ export async function thread(plugin: BCPlugin, field: string) {
     ? app.workspace.getLeaf(true)
     : app.workspace.activeLeaf;
 
-  await leaf.openFile(newFile, { active: true, state: 'source' });
+  await leaf?.openFile(newFile, { active: true, state: 'source' });
 
   if (templatePath) {
     if (app.plugins.plugins['templater-obsidian']) {
@@ -162,9 +170,9 @@ export async function thread(plugin: BCPlugin, field: string) {
   } else {
     const noteNameInputs = document.getElementsByClassName('view-header-title');
 
-    const newNoteInputEl = Array.from(noteNameInputs).find(
-      (input: HTMLInputElement) => input.innerText === newBasename,
-    ) as HTMLInputElement;
+    const newNoteInputEl = (<HTMLInputElement[]>Array.from(noteNameInputs)).find(
+      (input) => input.innerText === newBasename,
+    )!;
     newNoteInputEl.innerText = '';
     newNoteInputEl.focus();
   }

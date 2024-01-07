@@ -13,14 +13,13 @@ export function addDateNotesToGraph(
   const { settings } = plugin;
   const {
     addDateNotes,
-    dateNoteAddMonth,
-    dateNoteAddYear,
     dateNoteFormat,
     dateNoteField,
   } = settings;
   if (!addDateNotes) return;
 
   const { regex } = luxon.DateTime.fromFormatExplain('', dateNoteFormat);
+  if (!regex) throw new Error('Invalid format');
   frontms.forEach((page) => {
     const { file } = page;
     const { day } = file;

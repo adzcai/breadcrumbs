@@ -1,8 +1,8 @@
 import { DropdownComponent, Setting } from 'obsidian';
+import { fragWithHTML, subDetails } from './details';
 import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
 
 export function addTagNoteSettings(
   plugin: BCPlugin,
@@ -19,9 +19,11 @@ export function addTagNoteSettings(
       ),
     )
     .addDropdown((dd: DropdownComponent) => {
-      const options = {};
+      const options: Record<string, string> = {};
       getFields(settings.userHiers).forEach(
-        (field) => (options[field] = field),
+        (field) => {
+          options[field] = field;
+        },
       );
       dd.addOptions(Object.assign(options, { '': '' }))
         .setValue(settings.tagNoteField)

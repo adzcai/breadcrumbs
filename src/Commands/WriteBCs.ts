@@ -7,6 +7,7 @@ import { changeYaml, getCurrFile, splitAtYaml } from '../Utils/ObsidianUtils';
 export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
   const { settings, mainG } = plugin;
   const file = currFile ?? getCurrFile();
+  if (!file) throw new Error('Current file not found');
 
   const { limitWriteBCCheckboxes, writeBCsInline, userHiers } = settings;
 
@@ -16,7 +17,7 @@ export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
     return { succ: s, field: oppField };
   });
 
-  for (const { succ, field } of succInfo) {
+  await Promise.all(succInfo.map(async ({ succ, field }) => {
     if (!limitWriteBCCheckboxes.includes(field)) return;
 
     const content = await app.vault.read(file);
@@ -37,7 +38,7 @@ export async function writeBCToFile(plugin: BCPlugin, currFile?: TFile) {
 
       await app.vault.modify(file, newContent);
     }
-  }
+  }));
 }
 
 export async function writeBCsToAllFiles(plugin: BCPlugin) {
@@ -59,14 +60,11 @@ export async function writeBCsToAllFiles(plugin: BCPlugin) {
     ) {
       if (window.confirm('For real, please make a back up before.')) {
         const notice = new Notice('Operation Started');
-        const problemFiles = [];
-        for (const file of app.vault.getMarkdownFiles()) {
-          try {
-            await writeBCToFile(plugin, file);
-          } catch (e) {
-            problemFiles.push(file.path);
-          }
-        }
+        const problemFiles: string[] = [];
+        await Promise.all(app.vault.getMarkdownFiles().map(
+          (file) => writeBCToFile(plugin, file)
+            .catch(() => problemFiles.push(file.path)),
+        ));
         notice.setMessage('Operation Complete');
         if (problemFiles.length) {
           new Notice(

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import type { MultiGraph } from 'graphology';
 import type { IJugglSettings, JugglLayouts } from 'juggl-api';
 import type { LogLevel } from 'loglevel';
@@ -64,9 +65,15 @@ export interface BCSettings {
   indexNotes: string[];
   // Default layout to use for Juggl view
   jugglLayout: JugglLayouts;
-  /** An array of fields going _up_ which **will** be shown in the trail view */
+  /**
+   * An array of fields going _up_ which **will** be shown in the trail view
+   * @deprecated
+   */
   limitTrailCheckboxes: string[];
-  /** An array of fields in all directions which **will** get written when running `Write implied BCs to file` */
+  /**
+   * An array of fields in all directions which **will** get written
+   * when running `Write implied BCs to file`
+   */
   limitWriteBCCheckboxes: string[];
   limitJumpToFirstFields: string[];
   CHECKBOX_STATES_OVERWRITTEN: boolean;
@@ -286,7 +293,8 @@ declare module 'obsidian' {
           api: MetaeditApi;
         };
         juggl: { settings: { typedLinkPrefix: string } };
-        breadcrumbs: BCPlugin
+        breadcrumbs: BCPlugin;
+        'templater-obsidian': any;
       };
       enabledPlugins: { has: (plugin: string) => boolean };
     };
@@ -298,6 +306,7 @@ declare module 'obsidian' {
   interface View {
     editor: Editor;
   }
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   interface TFile {
     day?: DateTime;
   }
@@ -335,10 +344,16 @@ export interface BCAPII {
    */
   ARROW_DIRECTIONS: { [dir in Directions]: string };
 
-  /** The raw Breadcrumbs graph, as defined by the real Breadcrumbs in your notes, and any alternative hierarchy methods used. */
+  /**
+   * The raw Breadcrumbs graph, as defined by the real Breadcrumbs in your notes,
+   * and any alternative hierarchy methods used.
+   */
   mainG: MultiGraph;
 
-  /** The Breadcrumbs graph after the various implied relations have been filled in (as defined by your `Relations` settings). */
+  /**
+   * The Breadcrumbs graph after the various implied relations have been filled in
+   * (as defined by your `Relations` settings).
+   */
   closedG: MultiGraph;
 
   /** Build the obsidian graph as a graphology MultiGraph */

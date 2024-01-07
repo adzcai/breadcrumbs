@@ -6,7 +6,7 @@ import {
   ILLEGAL_FILENAME_CHARS,
 } from '../constants';
 import type BCPlugin from '../main';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addThreadingSettings(
   plugin: BCPlugin,

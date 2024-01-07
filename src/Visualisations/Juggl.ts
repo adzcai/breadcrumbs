@@ -1,20 +1,22 @@
-import type { EdgeDefinition, NodeSingular } from 'cytoscape';
+/* eslint-disable no-underscore-dangle */
+import type { EdgeDefinition, NodeSingular, NodeDefinition } from 'cytoscape';
 import type { MultiGraph } from 'graphology';
 import {
   DataStoreEvents,
   getPlugin,
-  ICoreDataStore,
-  IJuggl,
-  IJugglSettings,
-  IJugglStores,
+  type ICoreDataStore,
+  type IJuggl,
+  type IJugglSettings,
+  type IJugglStores,
   nodeDangling,
   nodeFromFile,
   VizId,
 } from 'juggl-api';
 import { info, warn } from 'loglevel';
 import {
-  Component, Events, MetadataCache, TFile,
+  Component, MetadataCache, TFile,
 } from 'obsidian';
+import { BCStoreEvents } from './BCStoreEvents';
 import { createIndex } from '../Commands/CreateIndex';
 import JugglButton from '../Components/JugglButton.svelte';
 import JugglDepth from '../Components/JugglDepth.svelte';
@@ -28,14 +30,12 @@ import {
 
 const STORE_ID = 'core';
 
-class BCStoreEvents extends Events implements DataStoreEvents { }
-
 export class BCStore extends Component implements ICoreDataStore {
   graph: MultiGraph;
 
   cache: MetadataCache;
 
-  depthMap: { [value: string]: number };
+  depthMap: { [value: string]: number } | undefined;
 
   constructor(
     graph: MultiGraph,
@@ -53,13 +53,14 @@ export class BCStore extends Component implements ICoreDataStore {
     return id.id.slice(0, -3);
   }
 
-  getFile(nodeId: VizId): TFile {
+  getFile(nodeId: VizId): TFile | null {
     return this.cache.getFirstLinkpathDest(nodeId.id, '');
   }
 
   async connectNodes(
     allNodes: cytoscape.NodeCollection,
     newNodes: cytoscape.NodeCollection,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     graph: IJuggl,
   ): Promise<cytoscape.EdgeDefinition[]> {
     const edges: EdgeDefinition[] = [];
@@ -92,6 +93,7 @@ export class BCStore extends Component implements ICoreDataStore {
     return Promise.resolve(edges);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getEvents(view: IJuggl): DataStoreEvents {
     return new BCStoreEvents();
   }
@@ -100,21 +102,23 @@ export class BCStore extends Component implements ICoreDataStore {
     nodeIds: VizId[],
     view: IJuggl,
   ): Promise<cytoscape.NodeDefinition[]> {
-    const new_nodes = [];
-    for (const nodeId of nodeIds) {
+    const newNodes: NodeDefinition[] = [];
+
+    await Promise.all(nodeIds.map(async (nodeId) => {
       const name = nodeId.id.slice(0, -3);
-      if (!this.graph.hasNode(name)) {
-        continue;
-      }
-      for (const new_node of this.graph.neighbors(name)) {
-        new_nodes.push(
-          await this.get(new VizId(`${new_node}.md`, STORE_ID), view),
+      if (!this.graph.hasNode(name)) return;
+
+      await Promise.all(this.graph.neighbors(name).map(async (newNode) => {
+        newNodes.push(
+          await this.get(new VizId(`${newNode}.md`, STORE_ID), view),
         );
-      }
-    }
-    return new_nodes;
+      }));
+    }));
+
+    return newNodes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   refreshNode(id: VizId, view: IJuggl): void | Promise<void> {
 
   }
@@ -142,6 +146,7 @@ export class BCStore extends Component implements ICoreDataStore {
 
     return nodeFromFile(file, view.plugin, view.settings, nodeId.toId()).then(
       (node) => {
+        // eslint-disable-next-line no-param-reassign
         node.data.depth = depth;
         return node;
       },
@@ -154,17 +159,19 @@ export function createJuggl(
   target: HTMLElement,
   initialNodes: string[],
   args: IJugglSettings,
-  depthMap: { [value: string]: number } = null,
-): IJuggl {
+  depthMap?: { [value: string]: number },
+): IJuggl | null {
   try {
     const jugglPlugin = getPlugin(app);
-    if (!jugglPlugin) {
-      // TODO: Error handling
-      return;
-    }
-    for (const key in JUGGL_CB_DEFAULTS) {
-      if (key in args && args[key] === undefined) args[key] = JUGGL_CB_DEFAULTS[key];
-    }
+    // TODO: Error handling
+    if (!jugglPlugin) return null;
+    Object.keys(JUGGL_CB_DEFAULTS).forEach((k) => {
+      const key = k as keyof IJugglSettings;
+      if (key in args && args[key] === undefined) {
+        // eslint-disable-next-line no-param-reassign
+        (args as any)[key] = JUGGL_CB_DEFAULTS[key];
+      }
+    });
 
     const bcStore = new BCStore(
       plugin.mainG,
@@ -193,9 +200,9 @@ function zoomToSource(juggl: IJuggl, source: string) {
   juggl.on('vizReady', (viz) => {
     // After layout is done, center on source node
     viz.one('layoutstop', (e) => {
-      const viz = e.cy;
-      const node = viz.$id(VizId.toId(`${source}.md`, STORE_ID));
-      viz.animate({
+      const vizviz = e.cy;
+      const node = vizviz.$id(VizId.toId(`${source}.md`, STORE_ID));
+      vizviz.animate({
         center: {
           eles: node,
         },
@@ -222,7 +229,7 @@ function createDepthMap(
   const depthMap: { [value: string]: number } = {};
   depthMap[`${source}.md`] = 0;
   paths.forEach((path) => {
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0; i < path.length; i += 1) {
       const name = `${path[i]}.md`;
       const depth = path.length - i - 1 + offset;
       if (name in depthMap) {
@@ -257,8 +264,24 @@ export function createJugglTrail(
 
   const amtChildren = target.children.length;
 
-  let jugglUp: IJuggl = null;
-  let jugglDown: IJuggl = null;
+  let jugglUp: IJuggl | null = null;
+  let jugglDown: IJuggl | null = null;
+
+  const depthMapUp = createDepthMap(paths, source, 1);
+  const maxDepthUp = Math.max(...Object.values(depthMapUp));
+
+  let depthDown: JugglDepth;
+  const depthUp = new JugglDepth({
+    target: toolbarDiv,
+    props: {
+      maxDepth: maxDepthUp,
+      onUpdateDepth: (d: number) => {
+        if (jugglUp) {
+          updateDepth(jugglUp, d);
+        }
+      },
+    },
+  });
 
   new JugglButton({
     target: sectDiv,
@@ -267,7 +290,7 @@ export function createJugglTrail(
       onClick: () => {
         if (jugglUp) {
           target.children[amtChildren].classList.remove('juggl-hide');
-          depthUp.$set({ visible: true });
+          depthUp.$set({ visible: true } as any);
         }
         if (jugglDown) {
           target.children[amtChildren + 1].classList.add('juggl-hide');
@@ -286,7 +309,7 @@ export function createJugglTrail(
       onClick: () => {
         if (jugglDown) {
           target.children[amtChildren + 1].classList.remove('juggl-hide');
-          depthUp.$set({ visible: false });
+          depthUp.$set({ visible: false } as any);
           if (jugglUp) {
             target.children[amtChildren].classList.add('juggl-hide');
             depthDown.$set({ visible: true });
@@ -303,6 +326,7 @@ export function createJugglTrail(
         const lines = index
           .split('\n')
           .map((line) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [indent, ...content] = line.split('- ');
             return content.join('- ');
           })
@@ -314,8 +338,10 @@ export function createJugglTrail(
           target: toolbarDiv,
           props: {
             maxDepth: maxDepthDown,
-            onUpdateDepth: (d) => {
-              updateDepth(jugglDown, d);
+            onUpdateDepth: (d: number) => {
+              if (jugglDown) {
+                updateDepth(jugglDown, d);
+              }
             },
           },
         });
@@ -327,10 +353,9 @@ export function createJugglTrail(
         const layout = plugin.settings.jugglLayout;
         if (layout === 'hierarchy') {
           argsDown.layout = {
-            // @ts-ignore
             name: 'dagre',
             animate: false,
-            ranker: (graph) => {
+            ranker: (graph: any) => {
               Object.keys(graph._nodes).forEach((id) => {
                 const name = VizId.fromId(id).id;
                 if (name in depthMapDown) {
@@ -340,7 +365,7 @@ export function createJugglTrail(
                 }
               });
             },
-          };
+          } as any;
         } else {
           argsDown.layout = layout;
         }
@@ -357,31 +382,18 @@ export function createJugglTrail(
         jugglDown = createJuggl(plugin, target, nodes, argsDown, depthMapDown);
 
         if (isFdgd) {
-          zoomToSource(jugglDown, source);
+          zoomToSource(jugglDown!, source);
         } else {
-          zoomToGraph(jugglDown);
+          zoomToGraph(jugglDown!);
         }
 
         if (jugglUp) {
           target.children[amtChildren].addClass('juggl-hide');
-          depthUp.$set({ visible: false });
+          depthUp.$set({ visible: false } as any);
         }
       },
       disabled: false,
       title: 'Show down graph',
-    },
-  });
-  const depthMapUp = createDepthMap(paths, source, 1);
-  const maxDepthUp = Math.max(...Object.values(depthMapUp));
-
-  let depthDown: JugglDepth;
-  const depthUp = new JugglDepth({
-    target: toolbarDiv,
-    props: {
-      maxDepth: maxDepthUp,
-      onUpdateDepth: (d) => {
-        updateDepth(jugglUp, d);
-      },
     },
   });
 
@@ -410,10 +422,9 @@ export function createJugglTrail(
   const layout = plugin.settings.jugglLayout;
   if (layout === 'hierarchy') {
     argsUp.layout = {
-      // @ts-ignore
       name: 'dagre',
       animate: false,
-      ranker: (graph) => {
+      ranker: (graph: any) => {
         Object.keys(graph._nodes).forEach((id) => {
           const name = VizId.fromId(id).id;
           if (name in depthMapUp) {
@@ -423,7 +434,7 @@ export function createJugglTrail(
           }
         });
       },
-    };
+    } as any;
   } else {
     argsUp.layout = layout;
   }
@@ -439,8 +450,8 @@ export function createJugglTrail(
   }
   jugglUp = createJuggl(plugin, target, nodes, argsUp, depthMapUp);
   if (isFdgd) {
-    zoomToSource(jugglUp, source);
+    zoomToSource(jugglUp!, source);
   } else {
-    zoomToGraph(jugglUp);
+    zoomToGraph(jugglUp!);
   }
 }

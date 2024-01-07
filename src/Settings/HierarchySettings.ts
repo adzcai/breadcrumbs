@@ -1,6 +1,6 @@
 import UserHierarchies from '../Components/UserHierarchies.svelte';
 import type BCPlugin from '../main';
-import { details } from './BreadcrumbsSettingTab';
+import { details } from './details';
 
 export function addHierarchySettings(
   plugin: BCPlugin,

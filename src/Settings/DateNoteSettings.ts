@@ -2,7 +2,7 @@ import { DropdownComponent, Setting } from 'obsidian';
 import { refreshIndex } from '../refreshIndex';
 import type BCPlugin from '../main';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addDateNoteSettings(
   plugin: BCPlugin,
@@ -10,9 +10,10 @@ export function addDateNoteSettings(
 ) {
   const { settings } = plugin;
   const { userHiers } = settings;
-  const fields = getFields(userHiers);
-  const fieldOptions = { '': '' };
-  fields.forEach((field) => (fieldOptions[field] = field));
+  const fieldOptions: Record<string, string> = { '': '' };
+  getFields(userHiers).forEach((field) => {
+    fieldOptions[field] = field;
+  });
 
   const dateNoteDetails = subDetails('Date Notes', alternativeHierarchyDetails);
 
@@ -66,7 +67,9 @@ export function addDateNoteSettings(
   //   .setName("Point up to Month")
   //   .setDesc(
   //     fragWithHTML(
-  //       "Select a field to point upwards to the corresponding month (This will still work if a note doesn't exist for that month).<br>Leave the dropdown blank to disable this feature."
+  //       "Select a field to point upwards to the corresponding month " +
+  //       "(This will still work if a note doesn't exist for that month)." +
+  //       "<br>Leave the dropdown blank to disable this feature."
   //     )
   //   )
   //   .addDropdown((dd: DropdownComponent) => {
@@ -81,7 +84,9 @@ export function addDateNoteSettings(
   //   .setName("Point up to Year")
   //   .setDesc(
   //     fragWithHTML(
-  //       "Select a field to point upwards to the corresponding year (This will still work if a note doesn't exist for that year).<br>Leave the dropdown blank to disable this feature."
+  //       "Select a field to point upwards to the corresponding year " +
+  //       "(This will still work if a note doesn't exist for that year)." +
+  //       "<br>Leave the dropdown blank to disable this feature."
   //     )
   //   )
   //   .addDropdown((dd: DropdownComponent) => {

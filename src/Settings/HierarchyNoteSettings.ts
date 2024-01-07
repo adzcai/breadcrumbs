@@ -3,7 +3,7 @@ import { refreshIndex } from '../refreshIndex';
 import type BCPlugin from '../main';
 import { splitAndTrim } from '../Utils/generalUtils';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addHierarchyNoteSettings(
   plugin: BCPlugin,
@@ -58,9 +58,11 @@ export function addHierarchyNoteSettings(
     .addDropdown((dd: DropdownComponent) => {
       const upFields = getFields(settings.userHiers, 'up');
 
-      const options = {};
+      const options: Record<string, string> = {};
       upFields.forEach(
-        (field) => (options[field] = field),
+        (field) => {
+          options[field] = field;
+        },
       );
       dd.addOptions(options)
         .setValue(settings.HNUpField || upFields[0])

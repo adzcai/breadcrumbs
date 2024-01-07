@@ -32,5 +32,8 @@ export async function jumpToFirstDir(plugin: BCPlugin, dir: Directions) {
   }
 
   const toFile = app.metadataCache.getFirstLinkpathDest(toNode, '');
-  await app.workspace.activeLeaf.openFile(toFile);
+  if (!toFile) throw new Error('No file found');
+  const leaf = app.workspace.activeLeaf;
+  if (!leaf) throw new Error('No active leaf');
+  await leaf.openFile(toFile);
 }

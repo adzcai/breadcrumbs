@@ -7,7 +7,7 @@ import type BCPlugin from '../main';
 import { splitAndTrim } from '../Utils/generalUtils';
 import { getFields } from '../Utils/HierUtils';
 import { drawTrail } from '../Views/TrailView';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addNavbarViewSettings(
   plugin: BCPlugin,
@@ -151,7 +151,7 @@ export function addNavbarViewSettings(
       'If multiple paths are found going up the parent tree, which of them should show?',
     )
     .addDropdown((dd) => {
-      const options = {};
+      const options: Record<string, string> = {};
       TRAIL_LENGTHS.forEach((length) => {
         options[length] = length;
       });

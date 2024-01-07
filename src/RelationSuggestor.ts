@@ -1,9 +1,9 @@
 import {
   Editor,
-  EditorPosition,
+  type EditorPosition,
   EditorSuggest,
-  EditorSuggestContext,
-  EditorSuggestTriggerInfo,
+  type EditorSuggestContext,
+  type EditorSuggestTriggerInfo,
   TFile,
 } from 'obsidian';
 import { isInsideYaml } from './Utils/ObsidianUtils';

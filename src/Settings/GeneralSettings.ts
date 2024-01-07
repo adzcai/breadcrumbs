@@ -2,7 +2,7 @@ import { Notice, Setting } from 'obsidian';
 import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 import { splitAndTrim } from '../Utils/generalUtils';
-import { details, fragWithHTML } from './BreadcrumbsSettingTab';
+import { details, fragWithHTML } from './details';
 
 export function addGeneralSettings(plugin: BCPlugin, containerEl: HTMLElement) {
   const { settings } = plugin;

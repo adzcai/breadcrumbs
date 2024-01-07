@@ -18,7 +18,7 @@ export async function getCSVRows(plugin: BCPlugin) {
 
   const headers = lines[0].split(',').map((head) => head.trim());
   lines.slice(1).forEach((row) => {
-    const rowObj = {};
+    const rowObj: Record<string, string> = {};
     row
       .split(',')
       .map((head) => dropWikilinks(head.trim()))

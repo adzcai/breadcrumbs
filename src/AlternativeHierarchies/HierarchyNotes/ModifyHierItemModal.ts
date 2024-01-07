@@ -9,7 +9,7 @@ interface HNItem {
 }
 
 export class ModifyHierItemModal extends Modal {
-  mount: ModifyHNItemComp;
+  mount!: ModifyHNItemComp;
 
   plugin: BCPlugin;
 

@@ -1,5 +1,5 @@
-import { MarkdownRenderer, Setting } from 'obsidian';
-import { details } from './BreadcrumbsSettingTab';
+import { MarkdownRenderer, MarkdownView, Setting } from 'obsidian';
+import { details } from './details';
 import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 
@@ -11,11 +11,12 @@ export function addRelationSettings(
   const relationDetails = details('Relationships', containerEl);
 
   function mermaidDiagram(diagramStr: string) {
-    MarkdownRenderer.renderMarkdown(
+    return MarkdownRenderer.render(
+      app,
       diagramStr,
       relationDetails.createDiv(),
       '',
-      null,
+      app.workspace.getActiveViewOfType(MarkdownView)!,
     );
   }
 

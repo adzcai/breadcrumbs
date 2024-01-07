@@ -46,15 +46,15 @@ export class BCAPI implements BCAPII {
   public getSubForFields = (fields: string[], g = this.mainG) => getSubForFields(g, fields);
 
   public dfsAllPaths = (
-    fromNode = getCurrFile()?.basename,
+    fromNode?: string,
     g = this.mainG,
-  ) => dfsAllPaths(g, fromNode);
+  ) => dfsAllPaths(g, fromNode ?? getCurrFile()!.basename);
 
   public createIndex = (allPaths: string[][], wikilinks = false, indent = '  ') => createIndex(allPaths, wikilinks, indent);
 
   public getMatrixNeighbours = (
-    fromNode = getCurrFile()?.basename,
-  ) => getMatrixNeighbours(this.plugin, fromNode);
+    fromNode?: string,
+  ) => getMatrixNeighbours(this.plugin, fromNode ?? getCurrFile()!.basename);
 
   public getOppDir = (dir: Directions) => getOppDir(dir);
 

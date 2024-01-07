@@ -12,8 +12,8 @@ import { BC_HIERARCHY_NOTE_NEXT, BC_HIERARCHY_NOTE_PREV } from '../../constants'
 const lineReg = new RegExp(/^\s*[+*-](?:\s+(?<field>.+?))?\s+\[\[(?<note>.+?)\]\]/);
 
 export async function getHierarchyNoteItems(file: TFile) {
-  const { listItems, frontmatter } = app.metadataCache.getFileCache(file);
-  if (!listItems) return [];
+  const { listItems, frontmatter } = app.metadataCache.getFileCache(file)!;
+  if (!listItems || !frontmatter) return [];
 
   const nextField: string | undefined = frontmatter[BC_HIERARCHY_NOTE_NEXT];
   const prevField: string | undefined = frontmatter[BC_HIERARCHY_NOTE_PREV];
@@ -35,7 +35,7 @@ export async function getHierarchyNoteItems(file: TFile) {
     // ensure this list item is a valid node in the hierarchy
     const line = lines[item.position.start.line];
     const results = lineReg.exec(line);
-    if (!results) continue;
+    if (!results?.groups) continue;
     const { field, note } = results.groups;
 
     // add its parent using the provided field
@@ -43,7 +43,7 @@ export async function getHierarchyNoteItems(file: TFile) {
     const { parent } = item;
     if (parent >= 0) {
       const matches = lineReg.exec(lines[parent]);
-      if (!matches) continue;
+      if (!matches?.groups) continue;
       const { note: parentNote } = matches.groups;
 
       hierarchyNoteItems.push({

@@ -26,20 +26,22 @@ export function addRegexNotesToGraph(
     const regexNoteFile = altFile.file;
     const regexNoteBasename = getDVBasename(regexNoteFile);
 
-    const regex = strToRegex(altFile[BC_REGEX_NOTE] as string);
+    const regex = strToRegex(altFile[BC_REGEX_NOTE] as string)!;
     info({ regex });
 
     let field = altFile[BC_REGEX_NOTE_FIELD] as string;
     if (typeof field !== 'string' || !fields.includes(field)) field = regexNoteField || fields[0];
 
-    const targets = [];
+    const targets: string[] = [];
     frontms.forEach((page) => {
       if (page[BC_IGNORE]) return;
       const basename = getDVBasename(page.file);
-      if (basename !== regexNoteBasename && regex.test(basename)) targets.push(basename);
+      if (basename !== regexNoteBasename && regex.test(basename)) {
+        targets.push(basename);
+      }
     });
 
-    for (const target of targets) {
+    targets.forEach((target) => {
       const sourceOrder = getSourceOrder(altFile);
       const targetOrder = getTargetOrder(frontms, regexNoteBasename);
       populateMain(
@@ -52,6 +54,6 @@ export function addRegexNotesToGraph(
         targetOrder,
         true,
       );
-    }
+    });
   });
 }

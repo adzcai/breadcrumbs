@@ -24,6 +24,7 @@ export function addNamingSystemNotesToGraph(
     userHiers,
   } = settings;
   const regex = strToRegex(namingSystemRegex);
+
   if (!regex) return;
 
   const field = namingSystemField || getFields(userHiers)[0];
@@ -51,7 +52,8 @@ export function addNamingSystemNotesToGraph(
   }
 
   function getUp(current: string) {
-    let currReg = trimRegex(regex, namingSystemSplit);
+    let currReg = trimRegex(regex!, namingSystemSplit);
+    if (!currReg) return null;
     let up = current.match(currReg);
     while (currReg || !up || up[0] === current) {
       currReg = trimRegex(currReg, namingSystemSplit);

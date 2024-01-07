@@ -20,6 +20,7 @@ import {
 } from '../Utils/graphUtils';
 import { getFields, getOppDir, getOppFields } from '../Utils/HierUtils';
 import { createJugglTrail } from '../Visualisations/Juggl';
+import { getFrontmatter } from '../Utils/ObsidianUtils';
 
 function getLimitedTrailSub(plugin: BCPlugin) {
   const { settings, mainG, closedG } = plugin;
@@ -123,22 +124,29 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
       || (mode !== 'preview' && !showBCsInEditLPMode)
     ) {
       activeMDView?.containerEl.querySelector('.BC-trail')?.remove();
-      return db.end2G();
+      db.end2G();
+      return;
     }
 
-    const { file } = activeMDView;
-    const { frontmatter } = app.metadataCache.getFileCache(file) ?? {};
+    const file = activeMDView.file!;
+    const frontmatter = getFrontmatter(file);
 
-    if (frontmatter?.[BC_HIDE_TRAIL] || frontmatter?.['kanban-plugin']) return db.end2G();
+    if (frontmatter?.[BC_HIDE_TRAIL] || frontmatter?.['kanban-plugin']) {
+      db.end2G();
+      return;
+    }
 
     const { basename } = file;
-    if (!mainG.hasNode(basename)) return db.end2G();
+    if (!mainG.hasNode(basename)) {
+      db.end2G();
+      return;
+    }
 
     const view = mode === 'preview'
       ? activeMDView.previewMode.containerEl.querySelector(
         'div.markdown-preview-view',
-      )
-      : activeMDView.contentEl.querySelector('div.markdown-source-view');
+      )!
+      : activeMDView.contentEl.querySelector('div.markdown-source-view')!;
 
     activeMDView.containerEl
       .querySelectorAll('.BC-trail')
@@ -146,12 +154,17 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
 
     const closedUp = getLimitedTrailSub(plugin);
     const sortedTrails = getBreadcrumbs(settings, closedUp, file);
+
+    if (!sortedTrails) return;
     info({ sortedTrails });
+
+    const nextPrev = getNextNPrev(plugin, basename);
+    if (!nextPrev) return;
 
     const {
       next: { reals: rNext, implieds: iNext },
       prev: { reals: rPrev, implieds: iPrev },
-    } = getNextNPrev(plugin, basename);
+    } = nextPrev;
 
     // Remove duplicate implied
     const next = [...rNext];
@@ -165,7 +178,10 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
 
     const noItems = !sortedTrails.length && !next.length && !prev.length;
 
-    if (noItems && noPathMessage === '') return db.end2G();
+    if (noItems && noPathMessage === '') {
+      db.end2G();
+      return;
+    }
 
     const selectorForMaxWidth = mode === 'preview'
       ? '.markdown-preview-view.is-readable-line-width .markdown-preview-sizer'
@@ -174,7 +190,7 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
     const elForMaxWidth = selectorForMaxWidth !== ''
       ? document.querySelector(selectorForMaxWidth)
       : null;
-    const max_width = elForMaxWidth
+    const maxWidth = elForMaxWidth
       ? getComputedStyle(elForMaxWidth).getPropertyValue('max-width')
       : '100%';
 
@@ -185,7 +201,7 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
       }`,
       attr: {
         style:
-          `${mode !== 'preview' ? `max-width: ${max_width};` : ''
+          `${mode !== 'preview' ? `max-width: ${maxWidth};` : ''
           }margin: 0 auto;`
           + `${respectReadableLineLength
             ? 'width: var(--file-line-width);'
@@ -196,7 +212,7 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
     plugin.visited.push([file.path, trailDiv]);
 
     if (mode === 'preview') {
-      view.querySelector('div.markdown-preview-sizer').before(trailDiv);
+      view.querySelector('div.markdown-preview-sizer')!.before(trailDiv);
 
       // const banner = document.querySelector('.obsidian-banner-wrapper')
       // if (banner) {
@@ -234,12 +250,14 @@ export async function drawTrail(plugin: BCPlugin): Promise<void> {
     trailDiv.empty();
     if (settings.indexNotes.includes(basename)) {
       trailDiv.innerText = 'Index Note';
-      return db.end2G();
+      db.end2G();
+      return;
     }
 
     if (noItems) {
       trailDiv.innerText = noPathMessage;
-      return db.end2G();
+      db.end2G();
+      return;
     }
 
     const targetProps = {

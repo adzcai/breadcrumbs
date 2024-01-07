@@ -1,7 +1,7 @@
 import Checkboxes from '../Components/Checkboxes.svelte';
 import type BCPlugin from '../main';
 import { getFields } from '../Utils/HierUtils';
-import { subDetails } from './BreadcrumbsSettingTab';
+import { subDetails } from './details';
 
 export function addJumpToNextSettings(
   plugin: BCPlugin,

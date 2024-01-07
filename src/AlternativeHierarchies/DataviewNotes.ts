@@ -12,7 +12,8 @@ import {
   populateMain,
 } from '../Utils/graphUtils';
 import { getFields } from '../Utils/HierUtils';
-import { getDVApi, getDVBasename } from '../Utils/ObsidianUtils';
+import { getDVBasename } from '../Utils/ObsidianUtils';
+import { getAPI } from 'obsidian-dataview';
 
 export function addDataviewNotesToGraph(
   plugin: BCPlugin,
@@ -22,7 +23,7 @@ export function addDataviewNotesToGraph(
 ) {
   const { settings } = plugin;
   const { userHiers, dataviewNoteField } = settings;
-  const dv = getDVApi(plugin);
+  const dv = getAPI();
   if (!dv && eligableAlts.length) {
     new Notice(DATAVIEW_MISSING);
     return;

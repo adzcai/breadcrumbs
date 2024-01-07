@@ -20,6 +20,7 @@
   "devDependencies": {
     "@tsconfig/svelte": "^5.0.2",
     "@types/csv2json": "^1.4.5",
+    "@types/cytoscape": "^3",
     "@types/d3": "^7.4.3",
     "@types/lodash": "^4.14.202",
     "@types/luxon": "^3.3.7",
@@ -29,15 +30,15 @@
     "@typescript-eslint/parser": "^6.15.0",
     "approvals": "^6.2.4",
     "builtin-modules": "^3.3.0",
-    "esbuild": "^0.19.10",
+    "cytoscape": "^3.28.1",
+    "esbuild": "^0.19.11",
     "esbuild-svelte": "^0.8.0",
     "eslint": "^8.56.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-plugin-import": "^2.29.1",
     "mocha": "^10.2.0",
-    "obsidian": "^1.4.11",
-    "obsidian-dataview": "^0.5.64",
+    "obsidian": "latest",
     "standard-version": "^9.5.0",
     "svelte": "^4.2.8",
     "svelte-check": "^3.6.2",
@@ -57,6 +58,10 @@
     "loglevel": "^1.8.1",
     "luxon": "^3.4.4",
     "obsidian-community-lib": "^2.0.2",
+    "obsidian-dataview": "^0.5.64",
     "yaml": "^2.3.4"
+  },
+  "resolutions": {
+    "obsidian": "latest"
   }
 }

@@ -2,7 +2,7 @@ import { DropdownComponent, Setting } from 'obsidian';
 import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addDataviewSettings(
   plugin: BCPlugin,

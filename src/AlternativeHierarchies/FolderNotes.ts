@@ -16,14 +16,14 @@ import {
 import { getFields } from '../Utils/HierUtils';
 import { getDVBasename, getFolderName } from '../Utils/ObsidianUtils';
 
-const getSubsFromFolder = (folder: TFolder) => {
-  const otherNotes: TFile[] = [];
-  const subFolders: TFolder[] = [];
-  folder.children.forEach((tAbstract) => {
-    if (tAbstract instanceof TFile) otherNotes.push(tAbstract);
-    else subFolders.push(tAbstract as TFolder);
+const getFolderChildren = (folder: TFolder) => {
+  const files: TFile[] = [];
+  const folders: TFolder[] = [];
+  folder.children.forEach((file) => {
+    if (file instanceof TFile) files.push(file);
+    else folders.push(file as TFolder);
   });
-  return { otherNotes, subFolders };
+  return { files, folders };
 };
 
 export function addFolderNotesToGraph(
@@ -45,7 +45,9 @@ export function addFolderNotesToGraph(
     const targets = frontms
       .map((ff) => ff.file)
       .filter(
-        (other) => getFolderName(other) === topFolderName && other.path !== file.path && !other[BC_IGNORE],
+        (other) => getFolderName(other) === topFolderName
+        && other.path !== file.path
+        && !(other as any)[BC_IGNORE],
       )
       .map(getDVBasename);
 
@@ -75,7 +77,7 @@ export function addFolderNotesToGraph(
         || !fields.includes(subfolderField)
       ) return;
 
-      const { subFolders } = getSubsFromFolder(topFolder);
+      const { folders: subFolders } = getFolderChildren(topFolder);
 
       subFolders.forEach((subFolder) => {
         subFolder.children.forEach((child) => {
@@ -98,22 +100,22 @@ export function addFolderNotesToGraph(
     }
 
     if (altFile[BC_FOLDER_NOTE_RECURSIVE]) {
-      const { subFolders } = getSubsFromFolder(topFolder);
+      const { folders: subFolders } = getFolderChildren(topFolder);
       const folderQueue: TFolder[] = [...subFolders];
 
       let currFolder = folderQueue.shift();
       while (currFolder !== undefined) {
-        const { otherNotes, subFolders } = getSubsFromFolder(currFolder);
+        const { files: currFiles, folders: currSubFolders } = getFolderChildren(currFolder);
 
         const folderNote = currFolder.name;
-        const targets = otherNotes.map(getDVBasename);
+        const currTargets = currFiles.map(getDVBasename);
 
         // if (!isInVault( folderNote, folderNote)) continue;
 
         const sourceOrder = 9999; // getSourceOrder(altFile);
         const targetOrder = 9999; //  getTargetOrder(frontms, basename);
 
-        const parentFolderNote = currFolder.parent.name;
+        const parentFolderNote = getFolderName(currFolder);
 
         populateMain(
           settings,
@@ -126,10 +128,8 @@ export function addFolderNotesToGraph(
           true,
         );
 
-        targets.forEach((target) => {
+        currTargets.forEach((target) => {
           if (target === folderNote) return;
-          const sourceOrder = 9999; // getSourceOrder(altFile);
-          const targetOrder = 9999; //  getTargetOrder(frontms, basename);
 
           populateMain(
             settings,
@@ -137,13 +137,13 @@ export function addFolderNotesToGraph(
             folderNote,
             field,
             target,
-            sourceOrder,
-            targetOrder,
+            9999, // getSourceOrder(altFile)
+            9999, //  getTargetOrder(frontms, basename)
             true,
           );
         });
 
-        folderQueue.push(...subFolders);
+        folderQueue.push(...currSubFolders);
         currFolder = folderQueue.shift();
       }
     }

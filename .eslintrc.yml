@@ -13,3 +13,10 @@ plugins:
   - '@typescript-eslint'
 rules:
   '@typescript-eslint/no-explicit-any': 'off'
+  'class-methods-use-this': 'off'
+  'no-param-reassign': 'off'
+  'no-new': 'off'
+  '@typescript-eslint/no-empty-function': 'off'
+  'import/prefer-default-export': 'off'
+  'no-continue': 'off'
+  'no-await-in-loop': 'off'

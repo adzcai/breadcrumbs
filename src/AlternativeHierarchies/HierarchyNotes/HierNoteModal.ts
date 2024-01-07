@@ -1,4 +1,4 @@
-import { FuzzyMatch, FuzzySuggestModal, Notice } from 'obsidian';
+import { type FuzzyMatch, FuzzySuggestModal, Notice } from 'obsidian';
 import { HierarchyNoteManipulator } from './HierarchyNoteManipulator';
 import type { BCSettings } from '../../interfaces';
 import type BCPlugin from '../../main';
@@ -36,17 +36,18 @@ export class HierarchyNoteSelectorModal extends FuzzySuggestModal<string> {
 
   getItems(): string[] {
     const { hierarchyNotes } = this.settings;
-    if (hierarchyNotes.length == 1 && hierarchyNotes[0].endsWith('/')) {
+    if (hierarchyNotes.length === 1 && hierarchyNotes[0].endsWith('/')) {
       // this is a folder
       const folder = hierarchyNotes[0].slice(0, -1);
-      if (app.plugins.plugins.dataview != undefined) {
+      if (typeof app.plugins.plugins.dataview !== 'undefined') {
         const pages = app.plugins.plugins.dataview.api.pages(
           `"${folder}"`,
         );
         return pages.values.map((page) => page.file.path);
       }
       new Notice('make sure you have dataview enabled');
-    } else return hierarchyNotes;
+    }
+    return hierarchyNotes;
   }
 
   getItemText(item: string): string {

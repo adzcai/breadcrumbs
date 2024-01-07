@@ -19,17 +19,8 @@ import { addRelationSettings } from './RelationSettings';
 import { addTagNoteSettings } from './TagNoteSettings';
 import { addThreadingSettings } from './ThreadingSettings';
 import { addNavbarViewSettings } from './TrailSettings';
-import { addVisModalSettings } from './VisModalSettings';
 import { addWriteBCsSettings } from './WriteBCsSettings';
-
-export const fragWithHTML = (html: string) => createFragment((frag) => (frag.createDiv().innerHTML = html));
-
-export const details = (text: string, parent: HTMLElement) => parent.createEl('details', {}, (d) => d.createEl('summary', { text }));
-
-export const subDetails = (text: string, parent: HTMLDetailsElement) => parent.createDiv({
-  attr: { style: 'padding-left: 10px;' },
-})
-  .createEl('details', {}, (d) => d.createEl('summary', { text }));
+import { details, fragWithHTML } from './details';
 
 export class BCSettingTab extends PluginSettingTab {
   plugin: BCPlugin;
@@ -96,8 +87,6 @@ export class BCSettingTab extends PluginSettingTab {
 
     addMatrixViewSettings(plugin, viewDetails);
     addNavbarViewSettings(plugin, viewDetails);
-    addVisModalSettings(plugin, viewDetails);
-    // addTreeViewSettings(plugin, viewDetails);
 
     const alternativeHierarchyDetails = details(
       'Alternative Hierarchies',

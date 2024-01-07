@@ -4,7 +4,6 @@ import {
   addIcon, type EventRef, MarkdownView, Plugin,
 } from 'obsidian';
 import {
-  addFeatherIcon,
   openView,
   wait,
 } from 'obsidian-community-lib/dist/utils';
@@ -45,7 +44,6 @@ import MatrixView from './Views/MatrixView';
 import { drawTrail } from './Views/TrailView';
 import TreeView from './Views/TreeView';
 import { BCStore } from './Visualisations/Juggl';
-import { VisModal } from './Visualisations/VisModal';
 
 export default class BCPlugin extends Plugin {
   settings!: BCSettings;
@@ -111,9 +109,13 @@ export default class BCPlugin extends Plugin {
     if (fieldSuggestor) this.registerEditorSuggest(new FieldSuggestor(this));
     if (enableRelationSuggestor) this.registerEditorSuggest(new RelationSuggestor(this));
 
-    // Override older versions of these settings
-    if (settings.limitTrailCheckboxes.length === 0) settings.limitTrailCheckboxes = getFields(settings.userHiers);
-    if (typeof settings.showAll === 'boolean') settings.showAll = settings.showAll ? 'All' : 'Shortest';
+    // Migrate older versions of these settings
+    if (settings.limitTrailCheckboxes.length === 0) {
+      settings.limitTrailCheckboxes = getFields(settings.userHiers);
+    }
+    if (typeof settings.showAll === 'boolean') {
+      settings.showAll = settings.showAll ? 'All' : 'Shortest';
+    }
 
     this.VIEWS = [
       {
@@ -136,9 +138,9 @@ export default class BCPlugin extends Plugin {
       },
     ];
 
-    for (const { constructor, type } of this.VIEWS) {
-      this.registerView(type, (leaf) => new (<any>constructor)(leaf, this));
-    }
+    this.VIEWS.forEach(({ constructor, type }) => {
+      this.registerView(type, (leaf) => new (constructor as any)(leaf, this));
+    });
 
     addIcon(DUCK_ICON, DUCK_ICON_SVG);
     addIcon(TRAIL_ICON, TRAIL_ICON_SVG);
@@ -155,7 +157,11 @@ export default class BCPlugin extends Plugin {
         this.closedG = buildClosedG(this);
       }
 
-      for (const { openOnLoad, type, constructor } of this.VIEWS) if (openOnLoad) await openView(type, constructor);
+      await Promise.all(this.VIEWS.map(async ({ openOnLoad, type, constructor }) => {
+        if (openOnLoad) {
+          await openView(type, constructor as any);
+        }
+      }));
 
       if (showBCs) await drawTrail(this);
       this.registerActiveLeafChangeEvent();
@@ -178,28 +184,21 @@ export default class BCPlugin extends Plugin {
       }
 
       app.workspace.iterateAllLeaves((leaf) => {
-        if (leaf instanceof MarkdownView)
-        // @ts-ignore
-        { leaf.view.previewMode.rerender(true); }
+        if (leaf instanceof MarkdownView) {
+          (leaf.view as any).previewMode.rerender(true);
+        }
       });
     });
 
-    for (const { type, plain, constructor } of this.VIEWS) {
+    this.VIEWS.forEach(({ type, plain, constructor }) => {
       this.addCommand({
         id: `show-${type}-view`,
         name: `Open ${plain} View`,
-        // @ts-ignore
-        checkCallback: async (checking: boolean) => {
-          if (checking) return app.workspace.getLeavesOfType(type).length === 0;
-          await openView(type, constructor);
+        callback: () => {
+          console.log('Opening', plain);
+          return openView(type, constructor as any);
         },
       });
-    }
-
-    this.addCommand({
-      id: 'open-vis-modal',
-      name: 'Open Visualisation Modal',
-      callback: () => new VisModal(this).open(),
     });
 
     this.addCommand({
@@ -264,12 +263,6 @@ export default class BCPlugin extends Plugin {
       });
     });
 
-    this.addRibbonIcon(
-      addFeatherIcon('tv') as string,
-      'Breadcrumbs Visualisation',
-      () => new VisModal(this).open(),
-    );
-
     this.registerMarkdownCodeBlockProcessor(
       'breadcrumbs',
       getCodeblockCB(this),
@@ -283,31 +276,35 @@ export default class BCPlugin extends Plugin {
 
     this.api = new BCAPI(this);
     // Register API to global window object.
-    ((<any>window)[API_NAME] = this.api)
-      && this.register(() => delete (<any>window)[API_NAME]);
+    (<any>window)[API_NAME] = this.api;
+    if (this.api) {
+      this.register(() => delete (<any>window)[API_NAME]);
+    }
   }
 
   getActiveViewType(type: string): MyView | null {
-    const view = this.VIEWS.find((view) => view.type === type);
+    const view = this.VIEWS.find((v) => v.type === type);
     if (!view) return null;
     const { constructor } = view;
     const leaves = app.workspace.getLeavesOfType(type);
     if (leaves && leaves.length >= 1) {
-      const { view } = leaves[0];
-      if (view instanceof constructor) return view;
+      const v = leaves[0].view;
+      if (v instanceof constructor) return v;
     }
     return null;
   }
 
-  loadSettings = async () => (this.settings = {
-    ...DEFAULT_SETTINGS,
-    ...await this.loadData(),
-  });
+  loadSettings = async () => {
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ...await this.loadData(),
+    };
+  };
 
   saveSettings = async () => this.saveData(this.settings);
 
   onunload(): void {
-    console.log('unloading');
+    console.log('unloading breadcrumbs');
     this.VIEWS.forEach(async (view) => {
       app.workspace.getLeavesOfType(view.type).forEach((leaf) => {
         leaf.detach();

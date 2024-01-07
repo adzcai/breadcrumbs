@@ -6,7 +6,7 @@ import type BCPlugin from '../main';
 export default class DucksView extends ItemView {
   private plugin: BCPlugin;
 
-  private view: Ducks;
+  private view!: Ducks;
 
   constructor(leaf: WorkspaceLeaf, plugin: BCPlugin) {
     super(leaf);

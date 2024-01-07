@@ -28,11 +28,13 @@ export function addLinkNotesToGraph(
 
     const links = app.metadataCache
       .getFileCache(linkNoteFile)
-      ?.links?.map((l) => l.link.match(/[^#|]+/)[0]);
+      ?.links?.map((l) => l.link.match(/[^#|]+/)![0])
+      .filter(Boolean);
 
     const embeds = app.metadataCache
       .getFileCache(linkNoteFile)
-      ?.embeds?.map((l) => l.link.match(/[^#|]+/)[0]);
+      ?.embeds?.map((l) => l.link.match(/[^#|]+/)![0])
+      .filter(Boolean);
 
     const targets = [...(links ?? []), ...(embeds ?? [])];
 
@@ -44,7 +46,7 @@ export function addLinkNotesToGraph(
         mainG,
         linkNoteBasename,
         field,
-        target,
+        target!,
         sourceOrder,
         targetOrder,
         true,

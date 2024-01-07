@@ -29,7 +29,7 @@ export function testHiers(): UserHier[] {
   ];
 }
 
-export function verify(sol: any) {
+export function verify(this: Mocha.Context, sol: any) {
   this.verifyAsJSON(sol, {
     reporters: ['tortoisemerge'],
     appendEOL: true,

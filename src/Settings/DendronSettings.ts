@@ -3,7 +3,7 @@ import { refreshIndex } from '../refreshIndex';
 import { DEFAULT_SETTINGS, MATRIX_VIEW } from '../constants';
 import type BCPlugin from '../main';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addDendronSettings(
   plugin: BCPlugin,
@@ -61,7 +61,7 @@ export function addDendronSettings(
     .addToggle((toggle) => toggle.setValue(settings.trimDendronNotes).onChange(async (value) => {
       settings.trimDendronNotes = value;
       await plugin.saveSettings();
-      await plugin.getActiveViewType(MATRIX_VIEW).draw();
+      await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
     }));
 
   new Setting(dendronDetails)

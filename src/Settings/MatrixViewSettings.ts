@@ -3,7 +3,7 @@ import { openView } from 'obsidian-community-lib/dist/utils';
 import { MATRIX_VIEW } from '../constants';
 import type BCPlugin from '../main';
 import MatrixView from '../Views/MatrixView';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addMatrixViewSettings(
   plugin: BCPlugin,
@@ -20,7 +20,7 @@ export function addMatrixViewSettings(
     .addToggle((toggle) => toggle.setValue(settings.showNameOrType).onChange(async (value) => {
       settings.showNameOrType = value;
       await plugin.saveSettings();
-      await plugin.getActiveViewType(MATRIX_VIEW).draw();
+      await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
     }));
 
   new Setting(MLViewDetails)
@@ -33,7 +33,7 @@ export function addMatrixViewSettings(
     .addToggle((toggle) => toggle.setValue(settings.showRelationType).onChange(async (value) => {
       settings.showRelationType = value;
       await plugin.saveSettings();
-      await plugin.getActiveViewType(MATRIX_VIEW).draw();
+      await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
     }));
 
   new Setting(MLViewDetails)
@@ -58,11 +58,13 @@ export function addMatrixViewSettings(
         const values = value.split('');
         if (
           value.length <= 5
-          && values.every((value) => ['0', '1', '2', '3', '4'].includes(value))
+          && values.every((val) => ['0', '1', '2', '3', '4'].includes(val))
         ) {
-          settings.squareDirectionsOrder = values.map((order) => Number.parseInt(order)) as (0 | 1 | 2 | 3 | 4)[];
+          settings.squareDirectionsOrder = values.map(
+            (order) => Number.parseInt(order, 10),
+          ) as (0 | 1 | 2 | 3 | 4)[];
           await plugin.saveSettings();
-          await plugin.getActiveViewType(MATRIX_VIEW).draw();
+          await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
         } else {
           new Notice(
             'The value must be a 5 digit number using only the digits "0", "1", "2", "3", "4"',
@@ -108,13 +110,15 @@ export function addMatrixViewSettings(
   new Setting(MLViewDetails)
     .setName('Show Implied Relations')
     .setDesc('Whether or not to show implied relations at all.')
-    .addToggle((toggle) => toggle.setValue(settings.showImpliedRelations).onChange(async (value) => {
-      settings.showImpliedRelations = value;
-      await plugin.saveSettings();
-      await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
-    }));
+    .addToggle((toggle) => toggle.setValue(settings.showImpliedRelations)
+      .onChange(async (value) => {
+        settings.showImpliedRelations = value;
+        await plugin.saveSettings();
+        await plugin.getActiveViewType(MATRIX_VIEW)?.draw();
+      }));
 
-  // TODO I don't think this setting works anymore. I removed it's functionality when adding multiple hierarchies
+  // TODO I don't think this setting works anymore.
+  // I removed it's functionality when adding multiple hierarchies
   // new Setting(MLViewDetails)
   //   .setName("Filter Implied Siblings")
   //   .setDesc(
@@ -124,6 +128,7 @@ export function addMatrixViewSettings(
   //           <li>notes with the same parent, or</li>
   //           <li>notes that are real siblings.</li>
   //         </ol>
+  // eslint-disable-next-line max-len
   //         This setting only applies to type 1 implied siblings. If enabled, Breadcrumbs will filter type 1 implied siblings so that they not only share the same parent, but the parent relation has the exact same type. For example, the two real relations <code>B -parent-> A</code>, and <code>C -parent-> A</code> create an implied sibling between B and C (they have the same parent, A). The two real relations <code>B -parent-> A</code>, and <code>C -up-> A</code> create an implied sibling between B and C (they also have the same parent, A). But if this setting is turned on, the second implied sibling would not show, because the parent types are differnet (parent versus up).`
   //     )
   //   )

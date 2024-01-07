@@ -4,6 +4,7 @@ import {
   normalizePath, Notice, type Pos, TFile, TFolder,
 } from 'obsidian';
 import type { DataArray } from 'obsidian-dataview/lib/api/data-array';
+import { getAPI } from 'obsidian-dataview';
 import { addCSVCrumbs, getCSVRows } from './AlternativeHierarchies/CSVCrumbs';
 import { addDataviewNotesToGraph } from './AlternativeHierarchies/DataviewNotes';
 import { addDateNotesToGraph } from './AlternativeHierarchies/DateNotes';
@@ -51,14 +52,13 @@ import {
 import { iterateHiers } from './Utils/HierUtils';
 import {
   getBaseFromMDPath,
-  getDVApi,
   getDVBasename,
 } from './Utils/ObsidianUtils';
 import { drawTrail } from './Views/TrailView';
 
 function getDVMetadataCache(plugin: BCPlugin) {
   const { db } = plugin;
-  const api = getDVApi(plugin);
+  const api = getAPI();
 
   db.start1G('getDVMetadataCache');
   const frontms = api.pages().values;
@@ -89,7 +89,7 @@ function isDVProxy(item: RawValue | DataArray<RawValue>): item is DataArray<RawV
  * @param  {RawValue} item
  */
 function unproxy(item: RawValue) {
-  const unproxied = [];
+  const unproxied: RawValue[] = [];
   const queue = [item];
 
   while (queue.length) {
@@ -116,7 +116,9 @@ function parseFieldValue(
       const splits = value.match(splitLinksRegex);
 
       if (splits !== null) {
-        const linkNames = splits.map((link) => getBaseFromMDPath(link.match(dropHeaderOrAlias)[1]));
+        const linkNames = splits.map(
+          (link) => getBaseFromMDPath(link.match(dropHeaderOrAlias)![1]),
+        );
         parsed.push(...linkNames);
       }
     } else {
@@ -127,19 +129,21 @@ function parseFieldValue(
         if (!rawItem) return;
 
         const unProxied = unproxy(rawItem);
-        unProxied.forEach((value) => {
-          if (typeof value === 'string' || typeof value === 'number') {
-            const rawAsString = value.toString();
+        unProxied.forEach((val) => {
+          if (typeof val === 'string' || typeof val === 'number') {
+            const rawAsString = val.toString();
             const splits = rawAsString.match(splitLinksRegex);
             if (splits !== null) {
-              const strs = splits.map((link) => getBaseFromMDPath(link.match(dropHeaderOrAlias)[1]));
+              const strs = splits.map(
+                (link) => getBaseFromMDPath(link.match(dropHeaderOrAlias)![1]),
+              );
               parsed.push(...strs);
             } else {
-              const basename = getBaseFromMDPath(rawAsString);
+              const basename = getBaseFromMDPath(rawAsString)!;
               parsed.push(basename.split('#')[0].split('|')[0]);
             }
-          } else if (value.path !== undefined) {
-            const basename = getBaseFromMDPath(value.path);
+          } else if (val && 'path' in val) {
+            const basename = getBaseFromMDPath(val.path);
             if (basename !== undefined) parsed.push(basename);
           }
         });
@@ -232,6 +236,7 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
     db.start2G('Hierarchy Notes');
 
     if (hierarchyNotes.length) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const noteOrFolder of hierarchyNotes) {
         if (noteOrFolder.endsWith('/')) {
           const folder = app.vault.getAbstractFileByPath(
@@ -239,6 +244,7 @@ export async function buildMainG(plugin: BCPlugin): Promise<MultiGraph> {
           );
 
           if (!(folder instanceof TFolder)) continue;
+          // eslint-disable-next-line no-restricted-syntax
           for (const child of folder.children) {
             if (child instanceof TFile) {
               addHNsToGraph(
@@ -337,6 +343,7 @@ export async function refreshIndex(plugin: BCPlugin) {
   plugin.mainG = await buildMainG(plugin);
   plugin.closedG = buildClosedG(plugin);
 
+  // eslint-disable-next-line no-restricted-syntax
   for (const { type } of plugin.VIEWS) await plugin.getActiveViewType(type)?.draw();
 
   if (plugin.settings.showBCs) await drawTrail(plugin);

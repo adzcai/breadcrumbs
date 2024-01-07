@@ -2,7 +2,7 @@ import log from 'loglevel';
 import { Setting } from 'obsidian';
 import type { DebugLevel } from '../interfaces';
 import type BCPlugin from '../main';
-import { details, fragWithHTML } from './BreadcrumbsSettingTab';
+import { details, fragWithHTML } from './details';
 
 export function addDebuggingsSettings(
   plugin: BCPlugin,
@@ -20,9 +20,9 @@ export function addDebuggingsSettings(
     )
     .addDropdown((dd) => {
       Object.keys(log.levels).forEach((key) => dd.addOption(key, key));
-      dd.setValue(settings.debugMode).onChange(async (value: DebugLevel) => {
-        log.setLevel(value);
-        settings.debugMode = value;
+      dd.setValue(settings.debugMode).onChange(async (value) => {
+        log.setLevel(value as DebugLevel);
+        settings.debugMode = value as DebugLevel;
         await plugin.saveSettings();
       });
     });

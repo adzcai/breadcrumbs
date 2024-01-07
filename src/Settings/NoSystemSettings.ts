@@ -3,7 +3,7 @@ import type BCPlugin from '../main';
 import { refreshIndex } from '../refreshIndex';
 import { strToRegex } from '../Utils/generalUtils';
 import { getFields } from '../Utils/HierUtils';
-import { fragWithHTML, subDetails } from './BreadcrumbsSettingTab';
+import { fragWithHTML, subDetails } from './details';
 
 export function addNoSystemSettings(
   plugin: BCPlugin,

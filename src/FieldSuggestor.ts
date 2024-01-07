@@ -1,9 +1,9 @@
 import {
   Editor,
-  EditorPosition,
+  type EditorPosition,
   EditorSuggest,
-  EditorSuggestContext,
-  EditorSuggestTriggerInfo,
+  type EditorSuggestContext,
+  type EditorSuggestTriggerInfo,
   TFile,
 } from 'obsidian';
 import { isInsideYaml } from './Utils/ObsidianUtils';
@@ -21,6 +21,7 @@ export class FieldSuggestor extends EditorSuggest<string> {
   onTrigger(
     cursor: EditorPosition,
     editor: Editor,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _: TFile,
   ): EditorSuggestTriggerInfo | null {
     const sub = editor.getLine(cursor.line).substring(0, cursor.ch);
@@ -49,14 +50,14 @@ export class FieldSuggestor extends EditorSuggest<string> {
       text: suggestion.replace('BC-', ''),
       cls: 'BC-suggester-container',
       attr: {
-        'aria-label': BC_FIELDS_INFO.find((f) => f.field === suggestion)?.desc,
+        'aria-label': BC_FIELDS_INFO.find((f) => f.field === suggestion)!.desc,
         'aria-label-position': 'right',
       },
     });
   }
 
   selectSuggestion(suggestion: string): void {
-    const { context, plugin } = this;
+    const { context } = this;
     if (!context) return;
 
     const field = BC_FIELDS_INFO.find((f) => f.field === suggestion);
